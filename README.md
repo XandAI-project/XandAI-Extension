@@ -1,226 +1,282 @@
-# 🤖 Ollama Text Sender - Extensão Chrome
+# 🤖 Ollama Text Sender
 
-Uma extensão do Google Chrome que permite enviar texto selecionado em páginas web diretamente para seu LLM Ollama local.
+A Chrome extension that allows you to send selected text directly to your local Ollama server with customizable prompts.
 
-## ✨ Funcionalidades
+## ✨ Features
 
-- **Seleção Simples**: Selecione qualquer texto em uma página web
-- **Botão Flutuante**: Aparece automaticamente próximo ao texto selecionado
-- **Menu Contextual**: Opção também disponível no menu do botão direito
-- **Prompt Personalizado**: Digite prompts específicos para cada consulta
-- **Janela Separada**: Abra o prompt em uma janela dedicada para mais espaço
-- **Modal de Resposta**: Visualize a resposta do Ollama em um modal elegante
-- **Configuração Fácil**: Interface simples para configurar URL e modelo
-- **Teste de Conexão**: Verificação automática da conectividade com Ollama
-- **Notificações**: Feedback visual do status das operações
+- 🎯 **Text Selection**: Select any text on web pages and send to Ollama
+- 🎨 **Customizable Prompts**: Configure prompt templates for different use cases  
+- 🔧 **Flexible Configuration**: Configure Ollama URL, model, and prompts through the interface
+- 🚀 **Intuitive Interface**: Floating button appears automatically when selecting text
+- 🔒 **Works on HTTPS**: Bypasses Mixed Content limitations using background scripts
+- 🌐 **Context Menu**: Also available through right-click context menu
 
-## 🚀 Instalação
+## 📦 Installation
 
-### Pré-requisitos
-- Google Chrome ou Chromium
-- Ollama instalado e rodando localmente
-- Pelo menos um modelo baixado no Ollama
+### Local Development
 
-### Passos de Instalação
-
-1. **Clone ou baixe este projeto**
+1. **Clone the repository:**
    ```bash
-   git clone <este-repositório>
-   cd ollama-text-sender
+   git clone <your-repository>
+   cd Second-Brain
    ```
 
-2. **Abra o Chrome e vá para as extensões**
-   - Digite `chrome://extensions/` na barra de endereços
-   - Ou vá em Menu → Mais ferramentas → Extensões
+2. **Open Chrome and go to:**
+   ```
+   chrome://extensions/
+   ```
 
-3. **Ative o modo desenvolvedor**
-   - Clique no botão "Modo do desenvolvedor" no canto superior direito
+3. **Enable "Developer mode"** (top right corner)
 
-4. **Carregue a extensão**
-   - Clique em "Carregar sem compactação"
-   - Selecione a pasta do projeto
-   - A extensão aparecerá na lista
+4. **Click "Load unpacked extension"**
 
-5. **Configure a extensão**
-   - Clique no ícone da extensão na barra de ferramentas
-   - Ajuste a URL do Ollama (padrão: `http://192.168.3.70:11434`)
-   - Defina o modelo (padrão: `phi4:latest`)
-   - Clique em "Testar" para verificar a conexão
-   - Clique em "Salvar"
+5. **Select the project folder**
 
-## 🎯 Como Usar
+6. **The "Ollama Text Sender" extension will appear in the list**
 
-### Método 1: Botão Flutuante
-1. Selecione qualquer texto em uma página web
-2. Um botão "🤖 Enviar para Ollama" aparecerá próximo à seleção
-3. Clique no botão
-4. Digite um prompt personalizado (opcional)
-5. Escolha:
-   - **🚀 Enviar**: Usar modal na página
-   - **🗗 Abrir em Janela**: Abrir em janela separada
-   - **Cancelar**: Fechar sem enviar
+### Ollama Configuration
 
-### Método 2: Menu Contextual
-1. Selecione qualquer texto em uma página web
-2. Clique com o botão direito
-3. Escolha "Enviar para Ollama"
-4. Digite um prompt personalizado (opcional)
-5. Escolha como processar
+Make sure your Ollama server is running:
 
-## ⚙️ Configuração do Ollama
-
-### Instalação do Ollama
 ```bash
-# No Linux/macOS
-curl -fsSL https://ollama.ai/install.sh | sh
-
-# No Windows
-# Baixe o instalador em https://ollama.ai/download
-```
-
-### Executando o Ollama
-```bash
-# Inicie o serviço
 ollama serve
-
-# Em outro terminal, baixe um modelo
-ollama pull phi4:latest
-ollama pull llama2
-ollama pull codellama
-ollama pull mistral
 ```
 
-### Verificar se está funcionando
-```bash
-# Teste via curl
-curl http://localhost:11434/api/tags
+By default, the extension tries to connect to `http://192.168.3.70:11434`. You can change this in the extension settings.
 
-# Ou teste um prompt
-curl http://localhost:11434/api/generate -d '{
-  "model": "phi4:latest",
-  "prompt": "Hello, world!",
-  "stream": false
-}'
-```
+### Manual Configuration (Temporary)
 
-## 🔧 Configurações Avançadas
+**Note**: Currently, the URL and model are hardcoded. Here's how to change them manually until the settings interface is fully implemented:
 
-### Modificar URL/Porta do Ollama
-Se seu Ollama estiver rodando em uma porta diferente:
-
-1. Abra a extensão
-2. Modifique a URL (ex: `http://localhost:11434`)
-3. Clique em "Testar" e depois "Salvar"
-
-### Usar Modelos Diferentes
-1. Primeiro, baixe o modelo no Ollama:
-   ```bash
-   ollama pull mistral
+1. **Change Ollama Server URL and Model:**
+   
+   Edit `content.js` and `background.js` files and look for these lines:
+   
+   **In `content.js` (around line 70):**
+   ```javascript
+   let settings = {
+     ollamaUrl: 'http://192.168.3.70:11434',  // ← Change this IP/URL
+     ollamaModel: 'hf.co/unsloth/gemma-3n-E4B-it-GGUF:latest',  // ← Change this model
+     promptTemplate: ''
+   };
    ```
-2. Na extensão, altere o campo "Modelo" para `mistral` (ou `mistral:latest`)
-3. Salve as configurações
+   
+   **In `background.js` (around line 12):**
+   ```javascript
+   chrome.storage.sync.set({
+     ollamaUrl: 'http://192.168.3.70:11434',  // ← Change this IP/URL
+     ollamaModel: 'hf.co/unsloth/gemma-3n-E4B-it-GGUF:latest',  // ← Change this model
+     promptTemplate: '',
+     autoShow: true
+   });
+   ```
 
-### CORS (Se necessário)
-Se enfrentar problemas de CORS, você pode iniciar o Ollama com:
-```bash
-OLLAMA_ORIGINS="*" ollama serve
+2. **Common configurations:**
+   ```javascript
+   // For local Ollama (default port)
+   ollamaUrl: 'http://localhost:11434'
+   
+   // For local Ollama (custom port)
+   ollamaUrl: 'http://localhost:8080'
+   
+   // For remote Ollama server
+   ollamaUrl: 'http://192.168.1.100:11434'
+   ```
+
+3. **Common models:**
+   ```javascript
+   // Popular models
+   ollamaModel: 'llama2'
+   ollamaModel: 'llama2:13b'
+   ollamaModel: 'codellama'
+   ollamaModel: 'mistral'
+   ollamaModel: 'phi'
+   ollamaModel: 'gemma:2b'
+   ```
+
+4. **After making changes:**
+   - Save the files
+   - Go to `chrome://extensions/`
+   - Click the **🔄 Reload** button on your extension
+   - Test the extension with the new settings
+
+## 🚀 How to Use
+
+### Method 1: Text Selection
+1. Select any text on a web page
+2. A **🤖 Send to Ollama** button will appear near the selection
+3. Click the button to open the custom prompt dialog
+4. Type your prompt (optional) and click "Send"
+5. The response will appear in a modal window
+
+### Method 2: Context Menu
+1. Select text on any page
+2. Right-click
+3. Choose **"Send to Ollama"** from the context menu
+
+### Settings
+1. Click the extension icon in the toolbar
+2. Configure:
+   - **Ollama URL**: Your server address (e.g., `http://localhost:11434`)
+   - **Model**: Ollama model to use (e.g., `llama2`, `codellama`)
+   - **Prompt Template**: Default prompt applied to all texts
+
+## 🛠️ Project Structure
+
+```
+Second-Brain/
+├── manifest.json          # Extension configuration
+├── background.js          # Service worker (HTTP requests)
+├── content.js             # Script injected into pages
+├── popup.html             # Settings interface
+├── popup.js               # Settings logic
+├── style.css              # Extension styles
+├── window.html            # Prompt window interface
+├── window.js              # Prompt window logic
+└── icons/                 # Extension icons
+    ├── icon16.png
+    ├── icon48.png
+    └── icon128.png
 ```
 
-## 🛠️ Desenvolvimento
+## 🔧 Development
 
-### Estrutura do Projeto
-```
-ollama-text-sender/
-├── manifest.json      # Configuração da extensão
-├── content.js        # Script das páginas web
-├── background.js     # Service worker
-├── popup.html        # Interface da extensão
-├── popup.js          # Lógica da interface
-├── style.css         # Estilos
-├── icons/            # Ícones da extensão
-└── README.md         # Este arquivo
-```
+### Technologies Used
 
-### Modificações
-Para personalizar a extensão:
+- **Manifest V3**: Latest Chrome extension API version
+- **Vanilla JavaScript**: No external dependencies
+- **Chrome Extension APIs**: Storage, Context Menus, Tabs, Runtime
 
-1. **Alterar estilos**: Edite `style.css`
-2. **Modificar comportamento**: Edite `content.js`
-3. **Ajustar interface**: Edite `popup.html` e `popup.js`
-4. **Configurar permissões**: Edite `manifest.json`
+### How to Contribute
 
-### Debugging
-1. Vá para `chrome://extensions/`
-2. Clique em "Detalhes" na extensão
-3. Clique em "Inspecionar visualizações" → "popup" ou "service worker"
+1. **Fork the repository**
 
-## 🐛 Solução de Problemas
+2. **Create a branch for your feature:**
+   ```bash
+   git checkout -b feature/new-functionality
+   ```
 
-### Erro de Conexão
-- Verifique se o Ollama está rodando: `curl http://localhost:11434/api/tags`
-- Confirme se a URL na extensão está correta
-- Verifique se há firewall bloqueando a conexão
+3. **Make your changes and commit:**
+   ```bash
+   git commit -m "Add new functionality"
+   ```
 
-### Modelo Não Encontrado
-- Liste modelos disponíveis: `ollama list`
-- Baixe o modelo: `ollama pull <nome-do-modelo>`
-- Verifique se o nome está correto na extensão
+4. **Push to the branch:**
+   ```bash
+   git push origin feature/new-functionality
+   ```
 
-### Botão Não Aparece
-- Recarregue a página
-- Verifique se a extensão está ativada
-- Tente usar o menu contextual (botão direito)
+5. **Open a Pull Request**
 
-### Permissões
-- Verifique se a extensão tem permissão para acessar o site
-- Vá em `chrome://extensions/` → Detalhes → Permissões
+### Contribution Guidelines
+
+- **Clean Code**: Keep code readable and well-commented
+- **Testing**: Test your changes on different web pages
+- **Compatibility**: Ensure compatibility with Chrome/Edge
+- **Performance**: Avoid code that impacts page performance
+
+### Report Bugs
+
+Open an issue with:
+- Detailed problem description
+- Steps to reproduce
+- Chrome/Edge version
+- Console logs (if any errors)
+
+## 🔒 Privacy and Security
+
+- ✅ **Local Data**: All settings stay in your browser
+- ✅ **No Telemetry**: We don't collect usage data
+- ✅ **Open Source**: All code is auditable
+- ✅ **HTTPS Safe**: Works on HTTPS sites without compromising security
+
+## 📋 Roadmap
+
+### 🎯 High Priority
+- [ ] **Remove hardcoded model and IP** - Allow users to configure Ollama server URL and model through settings interface
+- [ ] **Multiple AI providers** - Add support for OpenAI, Claude (Anthropic), Google Gemini, and other LLM APIs
+- [ ] **Autonomous actions** - Enable automated interactions like clicking buttons, posting comments, filling forms based on AI responses
+
+### 🔧 Core Features
+- [ ] Support for multiple Ollama servers
+- [ ] Conversation history and context persistence
+- [ ] Export/import settings and configurations
+- [ ] Dark theme and customizable UI
+- [ ] Keyboard shortcuts and hotkeys
+- [ ] Streaming responses for real-time feedback
+
+### 🚀 Advanced Features
+- [ ] Custom prompt templates library
+- [ ] Response caching and offline mode
+- [ ] Browser automation workflows
+- [ ] Integration with popular websites (Twitter, LinkedIn, GitHub)
+- [ ] Voice input and text-to-speech output
+- [ ] Collaborative features and shared prompts
+
+## 🐛 Known Issues
+
+- **Mixed Content**: Resolved using background scripts
+- **Extension Cache**: Reload extension in `chrome://extensions/` after updates
+- **Popup Blocker**: Some pages may block the prompt window
 
 ## 📝 Changelog
 
-### v1.1.0
-- ✅ Prompt personalizado para cada consulta
-- ✅ Opção de abrir em janela separada
-- ✅ Interface redesenhada com tema escuro
-- ✅ Configurações escondidas atrás de ícone
-- ✅ Melhor experiência de usuário
+### v1.2
+- Fixed Mixed Content issue on HTTPS sites
+- Improved settings interface
+- Added support for local networks
 
-### v1.0.0
-- ✅ Seleção de texto com botão flutuante
-- ✅ Menu contextual
-- ✅ Interface de configuração
-- ✅ Teste de conexão
-- ✅ Modal de resposta
-- ✅ Notificações visuais
-- ✅ Suporte a múltiplos modelos
+### v1.1
+- Added context menu
+- Implemented prompt templates
+- Settings interface
 
-## 🤝 Contribuindo
+### v1.0
+- Initial version
+- Text selection and Ollama sending
 
-1. Faça um fork do projeto
-2. Crie uma branch para sua feature
-3. Commit suas mudanças
-4. Push para a branch
-5. Abra um Pull Request
+## 📄 License
 
-## 📄 Licença
+This project is licensed under the MIT License - see the [LICENSE](#mit-license) section below for details.
 
-MIT License - veja o arquivo LICENSE para detalhes.
+### MIT License
 
-## 🎯 Novidades v1.1
+```
+MIT License
 
-### 🗗 **Janela Separada**
-- Mais espaço para trabalhar com prompts longos
-- Interface dedicada sem distrações
-- `Ctrl+Enter` para enviar rapidamente
+Copyright (c) 2024 Ollama Text Sender
 
-### 🎨 **Tema Escuro Moderno**
-- Cores preto e azul para reduzir cansaço visual
-- Interface similar ao GitHub Dark
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-### ⚙️ **Configurações Escondidas**
-- Clique no ícone ⚙️ para acessar configurações
-- Interface mais limpa focada no prompt
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
 
-## 🙏 Agradecimentos
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
 
-- [Ollama](https://ollama.ai/) pela fantástica ferramenta de LLM local
-- Comunidade open source pelos exemplos e documentação 
+## 🤝 Contributors
+
+Thanks to everyone who contributes to this project!
+
+<!-- Contributors list will be automatically populated by GitHub -->
+
+## 📞 Support
+
+- 🐛 **Issues**: [GitHub Issues](https://github.com/your-username/ollama-text-sender/issues)
+- 💬 **Discussions**: [GitHub Discussions](https://github.com/your-username/ollama-text-sender/discussions)
+- 📧 **Email**: your-email@example.com
+
+---
+
+**Made with ❤️ for the Ollama community** 

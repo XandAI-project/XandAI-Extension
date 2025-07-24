@@ -1,7 +1,5 @@
 // Service Worker para Chrome Extension
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('Ollama Text Sender instalado!');
-  
   // Criar menu contextual
   chrome.contextMenus.create({
     id: 'sendToOllama',
@@ -59,8 +57,6 @@ async function handleOllamaRequest(requestData) {
   try {
     const { url, model, prompt } = requestData;
     
-    console.log('Fazendo request para Ollama:', { url, model, prompt: prompt.substring(0, 100) + '...' });
-    
     const response = await fetch(`${url}/api/generate`, {
       method: 'POST',
       headers: {
@@ -88,7 +84,7 @@ async function handleOllamaRequest(requestData) {
 
 // Handler para quando a extensão é desabilitada/removida
 chrome.runtime.onSuspend.addListener(() => {
-  console.log('Ollama Text Sender suspenso');
+  // Extension suspended
 });
 
 // Verificar se Ollama está acessível (opcional)

@@ -1,8 +1,4 @@
 // Verificação inicial do contexto Chrome
-console.log('Content script carregado. Verificando contexto Chrome...');
-console.log('typeof chrome:', typeof chrome);
-console.log('chrome.storage disponível:', !!(chrome && chrome.storage));
-console.log('chrome.runtime disponível:', !!(chrome && chrome.runtime));
 
 // Variáveis globais
 let selectionButton = null;
@@ -10,19 +6,14 @@ let selectedText = '';
 
 // Função para criar o botão de envio
 function createSendButton() {
-  console.log('createSendButton chamada');
   const button = document.createElement('div');
   button.id = 'ollama-send-button';
   button.innerHTML = '🤖 Enviar para Ollama';
   button.className = 'ollama-send-btn';
   
-  console.log('Botão criado:', button);
-  
   button.addEventListener('click', async (e) => {
     e.stopPropagation();
     e.preventDefault();
-    
-    console.log('Botão Ollama clicado!', selectedText);
     
     if (selectedText.trim()) {
       try {
@@ -33,7 +24,6 @@ function createSendButton() {
         showNotification('Erro ao abrir prompt', 'error');
       }
     } else {
-      console.log('Texto selecionado está vazio');
       showNotification('Nenhum texto selecionado', 'error');
     }
   });
@@ -43,7 +33,6 @@ function createSendButton() {
 
 // Função para mostrar o botão próximo à seleção
 function showButton(x, y) {
-  console.log('showButton chamada');
   hideButton();
   
   try {
@@ -52,7 +41,6 @@ function showButton(x, y) {
     selectionButton.style.top = (y - 40) + 'px';
     
     document.body.appendChild(selectionButton);
-    console.log('Botão adicionado ao DOM na posição:', x, y - 40);
     
     // Auto-hide após 5 segundos
     setTimeout(hideButton, 5000);
@@ -85,7 +73,6 @@ async function sendToOllama(text, customPrompt = '') {
     try {
       const savedSettings = settings
       settings = { ...settings, ...savedSettings };
-      console.log('Configurações carregadas:', settings);
     } catch (error) {
       console.warn('Usando configurações padrão devido a erro:', error);
     }
@@ -392,7 +379,6 @@ async function openInWindow(text, prompt = '') {
     
     if (newWindow) {
       newWindow.focus();
-      console.log('Janela aberta com sucesso');
     } else {
       throw new Error('Popup bloqueado ou erro ao abrir janela');
     }
