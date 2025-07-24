@@ -1,0 +1,309 @@
+/* Botão de envio para Ollama */
+.ollama-send-btn {
+  position: absolute;
+  background: linear-gradient(135deg, #1f6feb 0%, #0d2636 100%);
+  color: #e6edf3;
+  border: 1px solid #30363d;
+  border-radius: 20px;
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 10000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  transition: all 0.3s ease;
+  user-select: none;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.ollama-send-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.8);
+  background: linear-gradient(135deg, #58a6ff 0%, #1f6feb 100%);
+  border-color: #58a6ff;
+}
+
+.ollama-send-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Notificações */
+.ollama-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  color: #e6edf3;
+  font-weight: 500;
+  z-index: 10001;
+  animation: slideIn 0.3s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  border: 1px solid;
+}
+
+.ollama-info {
+  background: #0c2d6b;
+  border-color: #1f6feb;
+}
+
+.ollama-success {
+  background: #0d4427;
+  border-color: #238636;
+}
+
+.ollama-error {
+  background: #490202;
+  border-color: #da3633;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Modal */
+.ollama-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10002;
+  animation: fadeIn 0.3s ease;
+}
+
+.ollama-modal-content {
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80%;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+  animation: scaleIn 0.3s ease;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.ollama-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #30363d;
+  background: #161b22;
+  border-radius: 12px 12px 0 0;
+}
+
+.ollama-modal-header h3 {
+  margin: 0;
+  color: #58a6ff;
+  font-size: 18px;
+}
+
+.ollama-close {
+  font-size: 24px;
+  cursor: pointer;
+  color: #7d8590;
+  transition: color 0.2s ease;
+}
+
+.ollama-close:hover {
+  color: #e6edf3;
+}
+
+.ollama-modal-body {
+  padding: 20px;
+}
+
+.ollama-original-text,
+.ollama-response,
+.ollama-custom-prompt {
+  margin-bottom: 20px;
+}
+
+.ollama-original-text h4,
+.ollama-response h4,
+.ollama-custom-prompt h4,
+.ollama-prompt-section h4,
+.ollama-text-section h4 {
+  margin: 0 0 10px 0;
+  color: #58a6ff;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ollama-original-text p,
+.ollama-response p,
+.ollama-custom-prompt p {
+  margin: 0;
+  padding: 15px;
+  background: #161b22;
+  border-radius: 8px;
+  border-left: 4px solid #58a6ff;
+  color: #e6edf3;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  border: 1px solid #30363d;
+}
+
+.ollama-response p {
+  border-left-color: #238636;
+}
+
+.ollama-custom-prompt p {
+  border-left-color: #58a6ff;
+  background: #0c2d6b;
+}
+
+.ollama-prompt-section,
+.ollama-text-section {
+  margin-bottom: 20px;
+}
+
+.ollama-prompt-input {
+  width: 100%;
+  min-height: 80px;
+  padding: 12px;
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  background: #0d1117;
+  color: #e6edf3;
+  font-family: inherit;
+  font-size: 14px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.ollama-prompt-input:focus {
+  outline: none;
+  border-color: #58a6ff;
+  box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.3);
+}
+
+.ollama-selected-text {
+  padding: 15px;
+  background: #161b22;
+  border-radius: 8px;
+  border-left: 4px solid #7d8590;
+  color: #e6edf3;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  border: 1px solid #30363d;
+}
+
+.ollama-modal-footer {
+  display: flex;
+  gap: 8px;
+  padding: 20px;
+  border-top: 1px solid #30363d;
+  background: #161b22;
+  border-radius: 0 0 12px 12px;
+  flex-wrap: wrap;
+}
+
+.ollama-modal-footer > button {
+  flex: 1;
+  min-width: 100px;
+  font-size: 12px;
+}
+
+/* Responsividade para botões pequenos */
+@media (max-width: 500px) {
+  .ollama-modal-footer {
+    flex-direction: column;
+  }
+  
+  .ollama-modal-footer > button {
+    width: 100%;
+    margin-bottom: 5px;
+  }
+}
+
+.ollama-copy-btn,
+.ollama-close-btn,
+.ollama-send-final-btn,
+.ollama-window-btn,
+.ollama-cancel-btn {
+  padding: 10px 20px;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  background: #21262d;
+  color: #e6edf3;
+}
+
+.ollama-copy-btn {
+  background: #238636;
+  border-color: #2ea043;
+}
+
+.ollama-copy-btn:hover {
+  background: #2ea043;
+}
+
+.ollama-send-final-btn {
+  background: #1f6feb;
+  border-color: #58a6ff;
+}
+
+.ollama-send-final-btn:hover {
+  background: #58a6ff;
+}
+
+.ollama-window-btn {
+  background: #7c3aed;
+  border-color: #8b5cf6;
+}
+
+.ollama-window-btn:hover {
+  background: #8b5cf6;
+}
+
+.ollama-close-btn,
+.ollama-cancel-btn {
+  background: #21262d;
+  border-color: #30363d;
+}
+
+.ollama-close-btn:hover,
+.ollama-cancel-btn:hover {
+  background: #30363d;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.7);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+} 

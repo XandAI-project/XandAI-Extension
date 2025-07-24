@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>🤖 Ollama Text Sender</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      min-height: calc(100vh - 40px);
+    }
+    
+    .window-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #30363d;
+    }
+    
+    .window-header h1 {
+      margin: 0;
+      color: #58a6ff;
+      font-size: 24px;
+    }
+    
+    .close-btn {
+      background: #da3633;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    
+    .close-btn:hover {
+      background: #e5534b;
+    }
+    
+    .content-area {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      height: calc(100vh - 140px);
+    }
+    
+    .section {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .section h3 {
+      margin: 0 0 10px 0;
+      color: #58a6ff;
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .prompt-input {
+      flex: 1;
+      min-height: 150px;
+      padding: 15px;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      background: #21262d;
+      color: #e6edf3;
+      font-family: inherit;
+      font-size: 14px;
+      resize: vertical;
+      box-sizing: border-box;
+    }
+    
+    .prompt-input:focus {
+      outline: none;
+      border-color: #58a6ff;
+      box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.3);
+    }
+    
+    .selected-text {
+      flex: 1;
+      padding: 15px;
+      background: #161b22;
+      border-radius: 8px;
+      border: 1px solid #30363d;
+      border-left: 4px solid #7d8590;
+      color: #e6edf3;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      overflow-y: auto;
+      min-height: 150px;
+    }
+    
+    .actions {
+      display: flex;
+      gap: 15px;
+      padding: 20px 0;
+      border-top: 1px solid #30363d;
+      margin-top: 20px;
+    }
+    
+    .btn {
+      flex: 1;
+      padding: 12px 20px;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+    
+    .btn-primary {
+      background: #238636;
+      border-color: #2ea043;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #2ea043;
+    }
+    
+    .btn-secondary {
+      background: #21262d;
+      border-color: #30363d;
+      color: #e6edf3;
+    }
+    
+    .btn-secondary:hover {
+      background: #30363d;
+    }
+    
+    .status {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 6px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 500;
+      display: none;
+    }
+    
+    .status.success {
+      background: #0d4427;
+      color: #3fb950;
+      border: 1px solid #238636;
+    }
+    
+    .status.error {
+      background: #490202;
+      color: #f85149;
+      border: 1px solid #da3633;
+    }
+    
+    .status.info {
+      background: #0c2d6b;
+      color: #58a6ff;
+      border: 1px solid #1f6feb;
+    }
+  </style>
+</head>
+<body>
+  <div class="window-header">
+    <h1>🤖 Enviar para Ollama</h1>
+    <button class="close-btn" onclick="window.close()">✕ Fechar</button>
+  </div>
+  
+  <div class="content-area">
+    <div class="section">
+      <h3>Prompt (opcional):</h3>
+      <textarea 
+        id="prompt-input" 
+        class="prompt-input" 
+        placeholder="Ex: Resuma este texto em 3 pontos principais, traduza para inglês, analise os pontos fortes e fracos..."
+      ></textarea>
+    </div>
+    
+    <div class="section">
+      <h3>Texto selecionado:</h3>
+      <div id="selected-text" class="selected-text"></div>
+    </div>
+  </div>
+  
+  <div class="actions">
+    <button id="send-btn" class="btn btn-primary">🚀 Enviar para Ollama</button>
+    <button id="cancel-btn" class="btn btn-secondary" onclick="window.close()">Cancelar</button>
+  </div>
+  
+  <div id="status" class="status"></div>
+  
+  <script src="window.js"></script>
+</body>
+</html> 

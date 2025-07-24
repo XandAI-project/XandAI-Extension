@@ -1,0 +1,44 @@
+{
+  "manifest_version": 3,
+  "name": "Ollama Text Sender",
+  "version": "1.2",
+  "description": "Envie texto selecionado para seu LLM Ollama local com prompt personalizado",
+  "permissions": [
+    "activeTab",
+    "contextMenus",
+    "storage"
+  ],
+  "host_permissions": [
+    "http://localhost:*/*",
+    "http://127.0.0.1:*/*",
+    "http://192.168.0.0/16:*/*",
+    "http://10.0.0.0/8:*/*",
+    "http://172.16.0.0/12:*/*",
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "css": ["style.css"]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Ollama Text Sender"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["window.html", "window.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+} 

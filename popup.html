@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body {
+      width: 380px;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      background: #0d1117;
+      color: #e6edf3;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .header h1 {
+      margin: 0;
+      color: #58a6ff;
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .settings-icon {
+      cursor: pointer;
+      font-size: 20px;
+      color: #7d8590;
+      transition: color 0.2s ease;
+      padding: 8px;
+      border-radius: 6px;
+      background: #21262d;
+      border: 1px solid #30363d;
+    }
+    
+    .settings-icon:hover {
+      color: #58a6ff;
+      background: #262c36;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      color: #e6edf3;
+      font-weight: 500;
+      font-size: 14px;
+    }
+    
+    input, select, textarea {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      font-size: 14px;
+      box-sizing: border-box;
+      background: #21262d;
+      color: #e6edf3;
+    }
+    
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #58a6ff;
+      box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.3);
+    }
+    
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+      font-family: inherit;
+    }
+    
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .btn-primary {
+      background: #238636;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #2ea043;
+    }
+    
+    .btn-secondary {
+      background: #21262d;
+      color: #e6edf3;
+      border: 1px solid #30363d;
+    }
+    
+    .btn-secondary:hover {
+      background: #30363d;
+    }
+    
+    .btn-danger {
+      background: #da3633;
+      color: white;
+    }
+    
+    .btn-danger:hover {
+      background: #e5534b;
+    }
+    
+    .status {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 6px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .status.success {
+      background: #0d4427;
+      color: #3fb950;
+      border: 1px solid #238636;
+    }
+    
+    .status.error {
+      background: #490202;
+      color: #f85149;
+      border: 1px solid #da3633;
+    }
+    
+    .status.info {
+      background: #0c2d6b;
+      color: #58a6ff;
+      border: 1px solid #1f6feb;
+    }
+    
+    .connection-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+      font-size: 12px;
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    
+    .status-dot.online {
+      background: #3fb950;
+    }
+    
+    .status-dot.offline {
+      background: #f85149;
+    }
+    
+    .instructions {
+      margin-top: 20px;
+      padding: 15px;
+      background: #161b22;
+      border-radius: 8px;
+      border-left: 4px solid #58a6ff;
+      border: 1px solid #30363d;
+    }
+    
+    .instructions h3 {
+      margin: 0 0 10px 0;
+      color: #58a6ff;
+      font-size: 14px;
+    }
+    
+    .instructions p {
+      margin: 0;
+      color: #7d8590;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    
+    .settings-panel {
+      display: none;
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #161b22;
+      border-radius: 8px;
+      border: 1px solid #30363d;
+    }
+    
+    .settings-panel.show {
+      display: block;
+    }
+    
+    .prompt-section {
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>🤖 Ollama Text Sender</h1>
+    <div class="settings-icon" id="settings-toggle" title="Configurações">⚙️</div>
+  </div>
+  
+  <div class="settings-panel" id="settings-panel">
+    <form id="settings-form">
+      <div class="form-group">
+        <label for="ollama-url">URL do Ollama:</label>
+        <input type="text" id="ollama-url" placeholder="http://192.168.3.70:11434">
+      </div>
+      
+      <div class="form-group">
+        <label for="ollama-model">Modelo:</label>
+        <input type="text" id="ollama-model" placeholder="phi4:latest">
+      </div>
+      
+      <div class="connection-status">
+        <div class="status-dot" id="connection-dot"></div>
+        <span id="connection-text">Verificando conexão...</span>
+      </div>
+      
+      <div class="button-group">
+        <button type="button" id="test-btn" class="btn-secondary">Testar</button>
+        <button type="submit" class="btn-primary">Salvar</button>
+      </div>
+    </form>
+  </div>
+  
+  <div class="prompt-section">
+    <div class="form-group">
+      <label for="prompt-template">Prompt Engineering (opcional):</label>
+      <textarea id="prompt-template" placeholder="Ex: Analise o seguinte texto e responda em português..."></textarea>
+    </div>
+    
+    <div class="button-group">
+      <button type="button" id="save-prompt-btn" class="btn-primary">Salvar Prompt</button>
+      <button type="button" id="clear-prompt-btn" class="btn-danger">Limpar</button>
+    </div>
+  </div>
+  
+  <div id="status" class="status" style="display: none;"></div>
+  
+  <div class="instructions">
+    <h3>Como usar:</h3>
+    <p>
+      1. Selecione qualquer texto em uma página web<br>
+      2. Clique no botão "🤖 Enviar para Ollama" que aparece<br>
+      3. Ou use o menu contextual (botão direito)<br>
+      4. Aguarde a resposta do seu LLM!
+    </p>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html> 
