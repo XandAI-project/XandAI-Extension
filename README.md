@@ -149,39 +149,143 @@ Second-Brain/
 
 ### How to Contribute
 
+We welcome contributions! Please follow these guidelines:
+
+#### 🚀 Getting Started
+
 1. **Fork the repository**
-
-2. **Create a branch for your feature:**
    ```bash
-   git checkout -b feature/new-functionality
+   git clone https://github.com/your-username/ollama-text-sender.git
+   cd ollama-text-sender
    ```
 
-3. **Make your changes and commit:**
+2. **Create a feature branch:**
    ```bash
-   git commit -m "Add new functionality"
+   git checkout -b feat/your-feature-name
+   # or
+   git checkout -b fix/bug-description
+   # or  
+   git checkout -b chore/task-description
    ```
 
-4. **Push to the branch:**
+3. **Make your changes and test thoroughly**
+
+4. **Commit using conventional commit format:**
    ```bash
-   git push origin feature/new-functionality
+   git commit -m "feat: add support for multiple AI providers"
+   git commit -m "fix: resolve mixed content error on HTTPS sites"
+   git commit -m "chore: update dependencies and clean up code"
+   git commit -m "docs: improve installation instructions"
+   git commit -m "style: format code and fix linting issues"
+   git commit -m "refactor: reorganize content script structure"
+   git commit -m "test: add unit tests for background script"
    ```
 
-5. **Open a Pull Request**
+5. **Push to your fork:**
+   ```bash
+   git push origin feat/your-feature-name
+   ```
 
-### Contribution Guidelines
+6. **Open a Pull Request** with a clear description
 
-- **Clean Code**: Keep code readable and well-commented
-- **Testing**: Test your changes on different web pages
-- **Compatibility**: Ensure compatibility with Chrome/Edge
-- **Performance**: Avoid code that impacts page performance
+#### 📝 Commit Message Convention
 
-### Report Bugs
+We use [Conventional Commits](https://www.conventionalcommits.org/) specification:
 
-Open an issue with:
-- Detailed problem description
-- Steps to reproduce
-- Chrome/Edge version
-- Console logs (if any errors)
+- **feat**: A new feature
+- **fix**: A bug fix
+- **docs**: Documentation changes
+- **style**: Code style changes (formatting, semicolons, etc)
+- **refactor**: Code refactoring without changing functionality
+- **test**: Adding or updating tests
+- **chore**: Maintenance tasks, dependency updates
+- **perf**: Performance improvements
+- **ci**: CI/CD pipeline changes
+
+**Examples:**
+```bash
+feat: add OpenAI API integration
+fix: resolve extension context invalidation error
+docs: add troubleshooting section to README
+style: fix ESLint warnings and format code
+refactor: extract common utilities to separate module
+test: add integration tests for Ollama communication
+chore: update manifest version to 1.3.0
+perf: optimize text selection detection algorithm
+```
+
+#### 🧪 Development Guidelines
+
+- **Code Quality**: Write clean, readable, and well-documented code
+- **Testing**: Test your changes on different websites and browsers
+- **Performance**: Ensure changes don't impact page load times
+- **Compatibility**: Test on Chrome and Edge browsers
+- **Security**: Follow security best practices for extensions
+- **Accessibility**: Consider accessibility in UI changes
+
+#### 🐛 Reporting Issues
+
+When reporting bugs, please include:
+
+- **Clear title** and description
+- **Steps to reproduce** the issue
+- **Expected vs actual behavior**
+- **Browser version** (Chrome/Edge)
+- **Extension version**
+- **Console logs** (if applicable)
+- **Screenshots** (if UI-related)
+
+**Issue Template:**
+```markdown
+## Bug Description
+Brief description of the bug
+
+## Steps to Reproduce
+1. Go to '...'
+2. Click on '...'
+3. See error
+
+## Expected Behavior
+What should happen
+
+## Actual Behavior
+What actually happens
+
+## Environment
+- Browser: Chrome 120.0.0.0
+- Extension Version: 1.2.0
+- OS: Windows 11
+```
+
+#### 💡 Feature Requests
+
+For new features, please:
+
+- **Check existing issues** and roadmap first
+- **Provide clear use case** and benefits
+- **Consider implementation complexity**
+- **Discuss with maintainers** before large changes
+
+### Code Style
+
+- Use **2 spaces** for indentation
+- Use **semicolons** consistently
+- Use **camelCase** for variables and functions
+- Use **PascalCase** for classes
+- Add **JSDoc comments** for functions
+- Keep **line length under 100 characters**
+
+### Testing Checklist
+
+Before submitting a PR:
+
+- [ ] Extension loads without errors in Chrome
+- [ ] Text selection works on different websites
+- [ ] Context menu functionality works
+- [ ] Settings can be configured and saved
+- [ ] No console errors or warnings
+- [ ] Works on both HTTP and HTTPS sites
+- [ ] Extension reloads properly after changes
 
 ## 🔒 Privacy and Security
 
@@ -189,6 +293,7 @@ Open an issue with:
 - ✅ **No Telemetry**: We don't collect usage data
 - ✅ **Open Source**: All code is auditable
 - ✅ **HTTPS Safe**: Works on HTTPS sites without compromising security
+- ✅ **Minimal Permissions**: Only requests necessary permissions
 
 ## 📋 Roadmap
 
@@ -221,19 +326,39 @@ Open an issue with:
 
 ## 📝 Changelog
 
-### v1.2
-- Fixed Mixed Content issue on HTTPS sites
-- Improved settings interface
-- Added support for local networks
+### v1.2.0
+- **feat**: Fixed Mixed Content issue on HTTPS sites
+- **feat**: Improved settings interface
+- **feat**: Added support for local networks
+- **docs**: Updated README with manual configuration
 
-### v1.1
-- Added context menu
-- Implemented prompt templates
-- Settings interface
+### v1.1.0
+- **feat**: Added context menu functionality
+- **feat**: Implemented prompt templates
+- **feat**: Created settings interface
+- **fix**: Improved error handling
 
-### v1.0
-- Initial version
-- Text selection and Ollama sending
+### v1.0.0
+- **feat**: Initial release
+- **feat**: Text selection and Ollama integration
+- **feat**: Floating button interface
+
+## 🧪 Testing
+
+### Manual Testing
+
+Test the extension on various websites:
+- Simple text websites (Wikipedia, news sites)
+- Complex web applications (Gmail, Twitter)
+- HTTPS and HTTP sites
+- Sites with strict CSP policies
+
+### Automated Testing
+
+We welcome contributions for:
+- Unit tests for utility functions
+- Integration tests for API communication
+- E2E tests for user workflows
 
 ## 📄 License
 
