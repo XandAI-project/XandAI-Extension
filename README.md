@@ -6,7 +6,8 @@ A Chrome extension that allows you to send selected text directly to your local 
 
 - 🎯 **Text Selection**: Select any text on web pages and send to Ollama
 - 🎨 **Customizable Prompts**: Configure prompt templates for different use cases  
-- 🔧 **Flexible Configuration**: Configure Ollama URL, model, and prompts through the interface
+- 🔧 **Dynamic Configuration**: Configure Ollama URL and model through the user interface
+- 🤖 **Automatic Model Detection**: Automatically loads available models from your Ollama server
 - 🚀 **Intuitive Interface**: Floating button appears automatically when selecting text
 - 🔒 **Works on HTTPS**: Bypasses Mixed Content limitations using background scripts
 - 🌐 **Context Menu**: Also available through right-click context menu
@@ -34,7 +35,7 @@ A Chrome extension that allows you to send selected text directly to your local 
 
 6. **The "Ollama Text Sender" extension will appear in the list**
 
-### Ollama Configuration
+### Ollama Setup
 
 Make sure your Ollama server is running:
 
@@ -42,84 +43,54 @@ Make sure your Ollama server is running:
 ollama serve
 ```
 
-By default, the extension tries to connect to `http://192.168.3.70:11434`. You can change this in the extension settings.
-
-### Manual Configuration (Temporary)
-
-**Note**: Currently, the URL and model are hardcoded. Here's how to change them manually until the settings interface is fully implemented:
-
-1. **Change Ollama Server URL and Model:**
-   
-   Edit `content.js` and `background.js` files and look for these lines:
-   
-   **In `content.js` (around line 70):**
-   ```javascript
-   let settings = {
-     ollamaUrl: 'http://192.168.3.70:11434',  // ← Change this IP/URL
-     ollamaModel: 'hf.co/unsloth/gemma-3n-E4B-it-GGUF:latest',  // ← Change this model
-     promptTemplate: ''
-   };
-   ```
-   
-   **In `background.js` (around line 12):**
-   ```javascript
-   chrome.storage.sync.set({
-     ollamaUrl: 'http://192.168.3.70:11434',  // ← Change this IP/URL
-     ollamaModel: 'hf.co/unsloth/gemma-3n-E4B-it-GGUF:latest',  // ← Change this model
-     promptTemplate: '',
-     autoShow: true
-   });
-   ```
-
-2. **Common configurations:**
-   ```javascript
-   // For local Ollama (default port)
-   ollamaUrl: 'http://localhost:11434'
-   
-   // For local Ollama (custom port)
-   ollamaUrl: 'http://localhost:8080'
-   
-   // For remote Ollama server
-   ollamaUrl: 'http://192.168.1.100:11434'
-   ```
-
-3. **Common models:**
-   ```javascript
-   // Popular models
-   ollamaModel: 'llama2'
-   ollamaModel: 'llama2:13b'
-   ollamaModel: 'codellama'
-   ollamaModel: 'mistral'
-   ollamaModel: 'phi'
-   ollamaModel: 'gemma:2b'
-   ```
-
-4. **After making changes:**
-   - Save the files
-   - Go to `chrome://extensions/`
-   - Click the **🔄 Reload** button on your extension
-   - Test the extension with the new settings
+The extension will automatically connect to `http://localhost:11434` by default.
 
 ## 🚀 How to Use
 
-### Method 1: Text Selection
+### Initial Setup
+
+1. **Click the extension icon** in the Chrome toolbar
+2. **Click the settings (⚙️) icon** to configure:
+   - **Ollama URL**: Your server address (e.g., `http://localhost:11434`)
+   - **Model**: Select from automatically loaded models
+   - **Prompt Template**: Default prompt applied to all texts (optional)
+3. **Click "Test"** to verify connection to your Ollama server
+4. **Click "Save"** to store your settings
+
+### Using the Extension
+
+#### Method 1: Text Selection
 1. Select any text on a web page
 2. A **🤖 Send to Ollama** button will appear near the selection
 3. Click the button to open the custom prompt dialog
 4. Type your prompt (optional) and click "Send"
 5. The response will appear in a modal window
 
-### Method 2: Context Menu
+#### Method 2: Context Menu
 1. Select text on any page
 2. Right-click
 3. Choose **"Send to Ollama"** from the context menu
 
+#### Method 3: Separate Window
+1. Select text and click the Ollama button
+2. Click **"🗗 Open in Window"** for a dedicated prompt window
+3. Useful for longer conversations or when you need more space
+
 ### Settings
-1. Click the extension icon in the toolbar
-2. Configure:
-   - **Ollama URL**: Your server address (e.g., `http://localhost:11434`)
-   - **Model**: Ollama model to use (e.g., `llama2`, `codellama`)
-   - **Prompt Template**: Default prompt applied to all texts
+
+The extension automatically loads available models from your Ollama server:
+
+- **Connection Status**: Shows if your Ollama server is reachable
+- **Model Selection**: Dropdown with all your installed models
+- **URL Configuration**: Support for local and remote Ollama servers
+- **Prompt Templates**: Pre-configure prompts for specific tasks
+
+**Common Ollama URLs:**
+```
+http://localhost:11434        # Default local installation
+http://192.168.1.100:11434   # Remote server on local network
+http://your-server.com:11434 # Remote server
+```
 
 ## 🛠️ Project Structure
 
@@ -253,8 +224,9 @@ What actually happens
 
 ## Environment
 - Browser: Chrome 120.0.0.0
-- Extension Version: 1.2.0
+- Extension Version: 1.3.0
 - OS: Windows 11
+- Ollama Version: 0.1.17
 ```
 
 #### 💡 Feature Requests
@@ -283,6 +255,8 @@ Before submitting a PR:
 - [ ] Text selection works on different websites
 - [ ] Context menu functionality works
 - [ ] Settings can be configured and saved
+- [ ] Model dropdown loads available models
+- [ ] Connection status updates correctly
 - [ ] No console errors or warnings
 - [ ] Works on both HTTP and HTTPS sites
 - [ ] Extension reloads properly after changes
@@ -298,9 +272,9 @@ Before submitting a PR:
 ## 📋 Roadmap
 
 ### 🎯 High Priority
-- [ ] **Remove hardcoded model and IP** - Allow users to configure Ollama server URL and model through settings interface
 - [ ] **Multiple AI providers** - Add support for OpenAI, Claude (Anthropic), Google Gemini, and other LLM APIs
 - [ ] **Autonomous actions** - Enable automated interactions like clicking buttons, posting comments, filling forms based on AI responses
+- [ ] **Conversation history** - Keep track of previous interactions and maintain context
 
 ### 🔧 Core Features
 - [ ] Support for multiple Ollama servers
@@ -318,13 +292,52 @@ Before submitting a PR:
 - [ ] Voice input and text-to-speech output
 - [ ] Collaborative features and shared prompts
 
-## 🐛 Known Issues
+## 🐛 Known Issues & Troubleshooting
 
-- **Mixed Content**: Resolved using background scripts
-- **Extension Cache**: Reload extension in `chrome://extensions/` after updates
-- **Popup Blocker**: Some pages may block the prompt window
+### Common Issues
+
+1. **"No model selected" error**
+   - Make sure your Ollama server is running
+   - Check that the URL in settings is correct
+   - Verify you have models installed: `ollama list`
+
+2. **Models not loading in dropdown**
+   - Check connection status in extension settings
+   - Verify Ollama server is accessible at the configured URL
+   - Try clicking "Test" in settings to diagnose connection issues
+
+3. **Extension context invalidated**
+   - Reload the extension in `chrome://extensions/`
+   - This can happen after Chrome updates or computer sleep
+
+4. **Mixed Content errors** (Resolved)
+   - Extension now uses background scripts to bypass HTTPS limitations
+
+### Installing Ollama Models
+
+If you don't have any models installed:
+
+```bash
+# Popular models to get started
+ollama pull llama2          # Good general purpose model
+ollama pull codellama       # Great for code-related tasks
+ollama pull mistral         # Fast and efficient
+ollama pull phi             # Lightweight option
+
+# List installed models
+ollama list
+```
 
 ## 📝 Changelog
+
+### v1.3.0 (Current)
+- **feat**: Dynamic model selection with automatic loading from Ollama API
+- **feat**: Real-time connection status and testing
+- **feat**: Improved settings interface with model dropdown
+- **feat**: Automatic model validation and error handling
+- **refactor**: Removed hardcoded IP addresses and models
+- **fix**: Enhanced error messages for better user experience
+- **docs**: Updated README with new configuration instructions
 
 ### v1.2.0
 - **feat**: Fixed Mixed Content issue on HTTPS sites
@@ -400,7 +413,7 @@ Thanks to everyone who contributes to this project!
 
 - 🐛 **Issues**: [GitHub Issues](https://github.com/your-username/ollama-text-sender/issues)
 - 💬 **Discussions**: [GitHub Discussions](https://github.com/your-username/ollama-text-sender/discussions)
-- 📧 **Email**: your-email@example.com
+- 📧 **Email**: av.souza2018@gmail.com
 
 ---
 

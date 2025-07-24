@@ -1,10 +1,10 @@
-// Verificação inicial do contexto Chrome
+// Initial Chrome context verification
 
-// Variáveis globais
+// Global variables
 let selectionButton = null;
 let selectedText = '';
 
-// Função para criar o botão de envio
+// Function to create send button
 function createSendButton() {
   const button = document.createElement('div');
   button.id = 'ollama-send-button';
@@ -31,7 +31,7 @@ function createSendButton() {
   return button;
 }
 
-// Função para mostrar o botão próximo à seleção
+// Function to show button near selection
 function showButton(x, y) {
   hideButton();
 
@@ -62,36 +62,48 @@ async function sendToOllama(text, customPrompt = '') {
   try {
     showNotification('Sending to Ollama...', 'info');
 
-    // Configurações padrão (sempre disponíveis)
-    let settings = {
-      ollamaUrl: 'http://192.168.3.70:11434',
-      ollamaModel: 'hf.co/unsloth/gemma-3n-E4B-it-GGUF:latest',
-      promptTemplate: ''
-    };
-
-    // Tentar carregar configurações salvas (apenas se disponível)
+    // Try to load saved settings from storage
+    let settings = {};
+    
     try {
-      const savedSettings = settings
-      settings = { ...settings, ...savedSettings };
+      settings = await new Promise((resolve) => {
+        chrome.storage.sync.get(['ollamaUrl', 'ollamaModel', 'promptTemplate'], (result) => {
+          resolve({
+            ollamaUrl: result.ollamaUrl || 'http://localhost:11434',
+            ollamaModel: result.ollamaModel || '',
+            promptTemplate: result.promptTemplate || ''
+          });
+        });
+      });
     } catch (error) {
-             console.warn('Using default settings due to error:', error);
+      console.warn('Error loading settings, using defaults:', error);
+      settings = {
+        ollamaUrl: 'http://localhost:11434',
+        ollamaModel: '',
+        promptTemplate: ''
+      };
     }
 
     const url = settings.ollamaUrl;
     const model = settings.ollamaModel;
     const promptTemplate = settings.promptTemplate;
 
-    // Construir prompt final
+    // Check if model is selected
+    if (!model) {
+      throw new Error('No model selected. Please select a model in the extension settings.');
+    }
+
+    // Build final prompt
     let finalPrompt = text;
 
-    // Prioridade: customPrompt > promptTemplate > texto apenas
+    // Priority: customPrompt > promptTemplate > text only
     if (customPrompt.trim()) {
       finalPrompt = `${customPrompt}\n\nText:\n${text}`;
     } else if (promptTemplate.trim()) {
       finalPrompt = `${promptTemplate}\n\nText:\n${text}`;
     }
 
-    // Enviar request através do background script
+    // Send request through background script
     const response = await new Promise((resolve, reject) => {
       try {
         chrome.runtime.sendMessage({
@@ -117,7 +129,7 @@ async function sendToOllama(text, customPrompt = '') {
 
     showNotification('Response received from Ollama!', 'success');
 
-    // Mostrar resposta em um modal
+    // Show response in modal
     const promptUsed = customPrompt || promptTemplate;
     showResponseModal(text, response.response, promptUsed);
 
@@ -127,7 +139,7 @@ async function sendToOllama(text, customPrompt = '') {
   }
 }
 
-// Função para mostrar notificações
+    // Function to show notifications
 function showNotification(message, type = 'info') {
   const notification = document.createElement('div');
   notification.className = `ollama-notification ollama-${type}`;
@@ -140,7 +152,7 @@ function showNotification(message, type = 'info') {
   }, 3000);
 }
 
-// Função para mostrar modal de prompt personalizado
+// Function to show custom prompt modal
 function showPromptModal(text) {
       // Modal creation for text prompt
 
@@ -148,7 +160,7 @@ function showPromptModal(text) {
     const modal = document.createElement('div');
     modal.className = 'ollama-modal';
 
-    // Escapar HTML para evitar problemas
+    // Escape HTML to avoid issues
     const escapedText = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
     modal.innerHTML = `
@@ -178,7 +190,7 @@ function showPromptModal(text) {
     document.body.appendChild(modal);
     // Modal added to DOM
 
-    // Focar na textarea do prompt
+    // Focus on prompt textarea
     const promptInput = modal.querySelector('.ollama-prompt-input');
     promptInput.focus();
 
@@ -189,7 +201,7 @@ function showPromptModal(text) {
       if (e.target === modal) modal.remove();
     });
 
-    // Enviar prompt personalizado
+    // Send custom prompt
     modal.querySelector('.ollama-send-final-btn').addEventListener('click', async () => {
       const customPrompt = promptInput.value.trim();
       // Sending with custom prompt
@@ -197,7 +209,7 @@ function showPromptModal(text) {
       await sendToOllama(text, customPrompt);
     });
 
-    // Abrir em janela separada
+    // Open in separate window
     modal.querySelector('.ollama-window-btn').addEventListener('click', async () => {
       const customPrompt = promptInput.value.trim();
       modal.remove();
@@ -212,7 +224,7 @@ function showPromptModal(text) {
 
 
 
-    // Enter para enviar (Ctrl+Enter para quebra de linha)
+    // Enter to send (Ctrl+Enter for line break)
     promptInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.ctrlKey) {
         e.preventDefault();
@@ -226,7 +238,7 @@ function showPromptModal(text) {
   }
 }
 
-// Função para mostrar modal com resposta
+// Function to show response modal
 function showResponseModal(originalText, response, customPrompt = '') {
   const modal = document.createElement('div');
   modal.className = 'ollama-modal';
@@ -269,7 +281,7 @@ function showResponseModal(originalText, response, customPrompt = '') {
 
   document.body.appendChild(modal);
 
-  // Event listeners para fechar modal
+  // Event listeners to close modal
   modal.querySelector('.ollama-close').addEventListener('click', () => modal.remove());
   modal.querySelector('.ollama-close-btn').addEventListener('click', () => modal.remove());
   modal.addEventListener('click', (e) => {
@@ -277,7 +289,7 @@ function showResponseModal(originalText, response, customPrompt = '') {
   });
 }
 
-// Event listeners para seleção de texto
+// Event listeners for text selection
 document.addEventListener('mouseup', (e) => {
   setTimeout(() => {
     const selection = window.getSelection();
@@ -290,8 +302,8 @@ document.addEventListener('mouseup', (e) => {
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
 
-      // Posição do botão próxima à seleção
-      const x = rect.left + (rect.width / 2) - 75; // Centralizar botão
+      // Button position near selection
+      const x = rect.left + (rect.width / 2) - 75; // Center button
       const y = rect.top + window.scrollY;
 
       // Showing button at position
@@ -303,57 +315,64 @@ document.addEventListener('mouseup', (e) => {
   }, 100);
 });
 
-// Esconder botão quando clicar em outro lugar
+// Hide button when clicking elsewhere
 document.addEventListener('mousedown', (e) => {
   if (selectionButton && !selectionButton.contains(e.target)) {
     hideButton();
   }
 });
 
-// Esconder botão ao pressionar ESC
+// Hide button when pressing ESC
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') {
     hideButton();
   }
 });
 
-// Função para abrir em janela separada
+// Function to open in separate window
 async function openInWindow(text, prompt = '') {
   try {
     // Opening window with text
 
-    // Configurações padrão
-    let settings = {
-      ollamaUrl: 'http://192.168.3.70:11434',
-      ollamaModel: 'hf.co/unsloth/gemma-3n-E4B-it-GGUF:latest',
-      promptTemplate: ''
-    };
-
-    // Tentar carregar configurações salvas
+    // Load settings from storage
+    let settings = {};
+    
     try {
-      const savedSettings = settings
-      settings = { ...settings, ...savedSettings };
+      settings = await new Promise((resolve) => {
+        chrome.storage.sync.get(['ollamaUrl', 'ollamaModel', 'promptTemplate'], (result) => {
+          resolve({
+            ollamaUrl: result.ollamaUrl || 'http://localhost:11434',
+            ollamaModel: result.ollamaModel || '',
+            promptTemplate: result.promptTemplate || ''
+          });
+        });
+      });
     } catch (error) {
       console.warn('Error loading settings in openInWindow:', error);
+      settings = {
+        ollamaUrl: 'http://localhost:11434',
+        ollamaModel: '',
+        promptTemplate: ''
+      };
     }
 
-    // Salvar dados no sessionStorage para a nova janela
+    // Save data to sessionStorage for new window
     const windowData = {
       text: text,
       prompt: prompt,
       timestamp: Date.now(),
-      settings: settings // Incluir configurações
+      settings: settings // Include settings
     };
 
     sessionStorage.setItem('ollamaWindowData', JSON.stringify(windowData));
 
-    // Calcular tamanho da janela
+    // Calculate window size
     const width = 800;
     const height = 700;
     const left = (screen.width - width) / 2;
     const top = (screen.height - height) / 2;
 
-    // Obter URL da extensão
+    // Get extension URL
     let extensionUrl;
     try {
       extensionUrl = chrome.runtime.getURL('window.html');
@@ -361,7 +380,7 @@ async function openInWindow(text, prompt = '') {
              throw new Error('chrome.runtime.getURL is not available: ' + error.message);
     }
 
-    // Abrir nova janela
+    // Open new window
     const windowFeatures = `
       width=${width},
       height=${height},
@@ -387,7 +406,7 @@ async function openInWindow(text, prompt = '') {
     console.error('Error opening window:', error);
     showNotification('Error opening window: ' + error.message, 'error');
 
-    // Fallback: usar modal normal
+    // Fallback: use normal modal
     showPromptModal(text);
   }
 }

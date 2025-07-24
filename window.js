@@ -16,8 +16,8 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Default settings as fallback
   window.ollamaSettings = {
-    ollamaUrl: 'http://192.168.3.70:11434',
-    ollamaModel: 'phi4:latest',
+    ollamaUrl: 'http://localhost:11434',
+    ollamaModel: '',
     promptTemplate: ''
   };
   
