@@ -1,7 +1,7 @@
 // DOM elements
 const form = document.getElementById('settings-form');
 const urlInput = document.getElementById('ollama-url');
-const modelInput = document.getElementById('ollama-model');
+const modelSelect = document.getElementById('ollama-model');
 const testBtn = document.getElementById('test-btn');
 const statusDiv = document.getElementById('status');
 const connectionDot = document.getElementById('connection-dot');
@@ -17,9 +17,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     const settings = await chrome.storage.sync.get(['ollamaUrl', 'ollamaModel', 'promptTemplate']);
     
-    urlInput.value = settings.ollamaUrl || 'http://192.168.3.70:11434';
-    modelInput.value = settings.ollamaModel || 'phi4:latest';
+    urlInput.value = settings.ollamaUrl || 'http://localhost:11434';
     promptTemplate.value = settings.promptTemplate || '';
+    
+    // Load available models after setting URL
+    if (urlInput.value) {
+      await loadAvailableModels();
+      // Set selected model after loading options
+      if (settings.ollamaModel) {
+        modelSelect.value = settings.ollamaModel;
+      }
+    }
     
     // Test connection automatically
     await testConnection(false);
@@ -63,7 +71,7 @@ form.addEventListener('submit', async (e) => {
   
   const settings = {
     ollamaUrl: urlInput.value.trim(),
-    ollamaModel: modelInput.value.trim()
+    ollamaModel: modelSelect.value.trim()
   };
   
   // Validate URL
@@ -118,14 +126,19 @@ async function testConnection(showResult = true) {
         showStatus(`Connection successful! ${modelCount} models available`, 'success');
       }
       
-      // Check if specified model exists
-      if (data.models && modelInput.value.trim()) {
-        const modelExists = data.models.some(m => 
-          m.name.includes(modelInput.value.trim())
-        );
+      // Update model list when connection is successful
+      if (data.models) {
+        updateModelOptions(data.models);
         
-        if (!modelExists && showResult) {
-          showStatus(`Warning: Model "${modelInput.value}" not found`, 'error');
+        // Check if specified model exists
+        if (modelSelect.value.trim()) {
+          const modelExists = data.models.some(m => 
+            m.name === modelSelect.value.trim()
+          );
+          
+          if (!modelExists && showResult) {
+            showStatus(`Warning: Model "${modelSelect.value}" not found`, 'error');
+          }
         }
       }
     } else {
@@ -179,12 +192,68 @@ function isValidUrl(string) {
   }
 }
 
-// Listener for URL changes (test automatically)
-urlInput.addEventListener('blur', () => {
+// Listener for URL changes (test automatically and reload models)
+urlInput.addEventListener('blur', async () => {
   if (urlInput.value.trim() && isValidUrl(urlInput.value.trim())) {
+    await loadAvailableModels();
     testConnection(false);
   }
 });
+
+// Load available models from Ollama API
+async function loadAvailableModels() {
+  const url = urlInput.value.trim();
+  
+  if (!isValidUrl(url)) {
+    clearModelOptions();
+    return;
+  }
+  
+  try {
+    const response = await fetch(`${url}/api/tags`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      updateModelOptions(data.models || []);
+    } else {
+      clearModelOptions();
+    }
+  } catch (error) {
+    console.error('Error loading models:', error);
+    clearModelOptions();
+  }
+}
+
+// Update model select options
+function updateModelOptions(models) {
+  const currentValue = modelSelect.value;
+  
+  // Clear existing options except the default one
+  modelSelect.innerHTML = '<option value="">Select a model...</option>';
+  
+  // Add model options
+  models.forEach(model => {
+    const option = document.createElement('option');
+    option.value = model.name;
+    option.textContent = model.name;
+    modelSelect.appendChild(option);
+  });
+  
+  // Restore previous selection if it still exists
+  if (currentValue && models.some(m => m.name === currentValue)) {
+    modelSelect.value = currentValue;
+  }
+}
+
+// Clear model options
+function clearModelOptions() {
+  modelSelect.innerHTML = '<option value="">Select a model...</option>';
+}
 
 // Keyboard shortcuts
 document.addEventListener('keydown', (e) => {

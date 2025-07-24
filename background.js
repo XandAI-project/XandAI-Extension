@@ -1,22 +1,36 @@
-// Service Worker para Chrome Extension
+// Service Worker for Chrome Extension
 chrome.runtime.onInstalled.addListener(() => {
-  // Criar menu contextual
+  // Create context menu
   chrome.contextMenus.create({
     id: 'sendToOllama',
     title: 'Send to Ollama',
     contexts: ['selection']
   });
   
-  // Configurações padrão
-  chrome.storage.sync.set({
-    ollamaUrl: 'http://192.168.3.70:11434',
-    ollamaModel: 'hf.co/unsloth/gemma-3n-E4B-it-GGUF:latest',
-    promptTemplate: '',
-    autoShow: true
+  // Set default settings only if they don't exist
+  chrome.storage.sync.get(['ollamaUrl', 'ollamaModel'], (result) => {
+    const defaults = {};
+    
+    if (!result.ollamaUrl) {
+      defaults.ollamaUrl = 'http://localhost:11434';
+    }
+    if (!result.ollamaModel) {
+      defaults.ollamaModel = '';
+    }
+    if (!result.promptTemplate) {
+      defaults.promptTemplate = '';
+    }
+    if (!result.autoShow) {
+      defaults.autoShow = true;
+    }
+    
+    if (Object.keys(defaults).length > 0) {
+      chrome.storage.sync.set(defaults);
+    }
   });
 });
 
-// Handler para menu contextual
+// Handler for context menu
 chrome.contextMenus.onClicked.addListener((info, tab) => {
   if (info.menuItemId === 'sendToOllama' && info.selectionText) {
     // Enviar comando para content script
