@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Ollama Text Sender",
-  "version": "1.2",
-  "description": "Envie texto selecionado para seu LLM Ollama local com prompt personalizado",
+  "version": "1.3",
+  "description": "Send selected text to your local Ollama LLM with custom prompts",
   "permissions": [
     "activeTab",
     "contextMenus",

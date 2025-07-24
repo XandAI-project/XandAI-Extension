@@ -8,44 +8,44 @@ let selectedText = '';
 function createSendButton() {
   const button = document.createElement('div');
   button.id = 'ollama-send-button';
-  button.innerHTML = '🤖 Enviar para Ollama';
+  button.innerHTML = '🤖 Send to Ollama';
   button.className = 'ollama-send-btn';
-  
+
   button.addEventListener('click', async (e) => {
     e.stopPropagation();
     e.preventDefault();
-    
+
     if (selectedText.trim()) {
       try {
         showPromptModal(selectedText);
         hideButton();
       } catch (error) {
-        console.error('Erro ao mostrar modal:', error);
-        showNotification('Erro ao abrir prompt', 'error');
+        console.error('Error showing modal:', error);
+        showNotification('Error opening prompt', 'error');
       }
     } else {
-      showNotification('Nenhum texto selecionado', 'error');
+      showNotification('No text selected', 'error');
     }
   });
-  
+
   return button;
 }
 
 // Função para mostrar o botão próximo à seleção
 function showButton(x, y) {
   hideButton();
-  
+
   try {
     selectionButton = createSendButton();
     selectionButton.style.left = x + 'px';
     selectionButton.style.top = (y - 40) + 'px';
-    
+
     document.body.appendChild(selectionButton);
-    
+
     // Auto-hide após 5 segundos
     setTimeout(hideButton, 5000);
   } catch (error) {
-    console.error('Erro ao mostrar botão:', error);
+            console.error('Error showing button:', error);
   }
 }
 
@@ -60,37 +60,37 @@ function hideButton() {
 // Função para enviar texto para Ollama
 async function sendToOllama(text, customPrompt = '') {
   try {
-    showNotification('Enviando para Ollama...', 'info');
-    
+    showNotification('Sending to Ollama...', 'info');
+
     // Configurações padrão (sempre disponíveis)
     let settings = {
       ollamaUrl: 'http://192.168.3.70:11434',
       ollamaModel: 'hf.co/unsloth/gemma-3n-E4B-it-GGUF:latest',
       promptTemplate: ''
     };
-    
+
     // Tentar carregar configurações salvas (apenas se disponível)
     try {
       const savedSettings = settings
       settings = { ...settings, ...savedSettings };
     } catch (error) {
-      console.warn('Usando configurações padrão devido a erro:', error);
+             console.warn('Using default settings due to error:', error);
     }
-    
+
     const url = settings.ollamaUrl;
     const model = settings.ollamaModel;
     const promptTemplate = settings.promptTemplate;
-    
+
     // Construir prompt final
     let finalPrompt = text;
-    
+
     // Prioridade: customPrompt > promptTemplate > texto apenas
     if (customPrompt.trim()) {
-      finalPrompt = `${customPrompt}\n\nTexto:\n${text}`;
+      finalPrompt = `${customPrompt}\n\nText:\n${text}`;
     } else if (promptTemplate.trim()) {
-      finalPrompt = `${promptTemplate}\n\nTexto:\n${text}`;
+      finalPrompt = `${promptTemplate}\n\nText:\n${text}`;
     }
-    
+
     // Enviar request através do background script
     const response = await new Promise((resolve, reject) => {
       try {
@@ -107,23 +107,23 @@ async function sendToOllama(text, customPrompt = '') {
           } else if (response?.success) {
             resolve(response.data);
           } else {
-            reject(new Error(response?.error || 'Resposta inválida do background script'));
+            reject(new Error(response?.error || 'Invalid response from background script'));
           }
         });
       } catch (error) {
-        reject(new Error('Erro ao enviar mensagem para background: ' + error.message));
+        reject(new Error('Error sending message to background: ' + error.message));
       }
     });
-    
-    showNotification('Resposta recebida do Ollama!', 'success');
-    
+
+    showNotification('Response received from Ollama!', 'success');
+
     // Mostrar resposta em um modal
     const promptUsed = customPrompt || promptTemplate;
     showResponseModal(text, response.response, promptUsed);
-    
+
   } catch (error) {
-    console.error('Erro ao enviar para Ollama:', error);
-    showNotification('Erro ao conectar com Ollama: ' + error.message, 'error');
+    console.error('Error sending to Ollama:', error);
+    showNotification('Error connecting to Ollama: ' + error.message, 'error');
   }
 }
 
@@ -132,9 +132,9 @@ function showNotification(message, type = 'info') {
   const notification = document.createElement('div');
   notification.className = `ollama-notification ollama-${type}`;
   notification.textContent = message;
-  
+
   document.body.appendChild(notification);
-  
+
   setTimeout(() => {
     notification.remove();
   }, 3000);
@@ -142,76 +142,76 @@ function showNotification(message, type = 'info') {
 
 // Função para mostrar modal de prompt personalizado
 function showPromptModal(text) {
-  console.log('showPromptModal chamada com texto:', text);
-  
+      // Modal creation for text prompt
+
   try {
     const modal = document.createElement('div');
     modal.className = 'ollama-modal';
-    
+
     // Escapar HTML para evitar problemas
     const escapedText = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    
+
     modal.innerHTML = `
       <div class="ollama-modal-content">
         <div class="ollama-modal-header">
-          <h3>🤖 Enviar para Ollama</h3>
+          <h3>🤖 Send to Ollama</h3>
           <span class="ollama-close">&times;</span>
         </div>
         <div class="ollama-modal-body">
-          <div class="ollama-prompt-section">
-            <h4>Prompt (opcional):</h4>
-            <textarea class="ollama-prompt-input" placeholder="Ex: Resuma este texto em 3 pontos principais..."></textarea>
-          </div>
-          <div class="ollama-text-section">
-            <h4>Texto selecionado:</h4>
+                     <div class="ollama-prompt-section">
+             <h4>Prompt (optional):</h4>
+             <textarea class="ollama-prompt-input" placeholder="e.g.: Summarize this text in 3 main points..."></textarea>
+           </div>
+           <div class="ollama-text-section">
+             <h4>Selected text:</h4>
             <div class="ollama-selected-text">${escapedText}</div>
           </div>
         </div>
-        <div class="ollama-modal-footer">
-          <button class="ollama-send-final-btn">🚀 Enviar</button>
-          <button class="ollama-window-btn">🗗 Abrir em Janela</button>
-          <button class="ollama-cancel-btn">Cancelar</button>
+                 <div class="ollama-modal-footer">
+           <button class="ollama-send-final-btn">🚀 Send</button>
+           <button class="ollama-window-btn">🗗 Open in Window</button>
+           <button class="ollama-cancel-btn">Cancel</button>
         </div>
       </div>
     `;
-    
+
     document.body.appendChild(modal);
-    console.log('Modal adicionado ao DOM');
-    
+    // Modal added to DOM
+
     // Focar na textarea do prompt
     const promptInput = modal.querySelector('.ollama-prompt-input');
     promptInput.focus();
-    
+
     // Event listeners
     modal.querySelector('.ollama-close').addEventListener('click', () => modal.remove());
     modal.querySelector('.ollama-cancel-btn').addEventListener('click', () => modal.remove());
     modal.addEventListener('click', (e) => {
       if (e.target === modal) modal.remove();
     });
-    
+
     // Enviar prompt personalizado
     modal.querySelector('.ollama-send-final-btn').addEventListener('click', async () => {
       const customPrompt = promptInput.value.trim();
-      console.log('Enviando com prompt:', customPrompt);
+      // Sending with custom prompt
       modal.remove();
       await sendToOllama(text, customPrompt);
     });
-    
+
     // Abrir em janela separada
     modal.querySelector('.ollama-window-btn').addEventListener('click', async () => {
       const customPrompt = promptInput.value.trim();
       modal.remove();
-      
+
       try {
         await openInWindow(text, customPrompt);
       } catch (error) {
-        console.error('Erro ao abrir janela:', error);
-        showNotification('Erro ao abrir janela: ' + error.message, 'error');
+        console.error('Error opening window:', error);
+        showNotification('Error opening window: ' + error.message, 'error');
       }
     });
-    
 
-    
+
+
     // Enter para enviar (Ctrl+Enter para quebra de linha)
     promptInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.ctrlKey) {
@@ -219,10 +219,10 @@ function showPromptModal(text) {
         modal.querySelector('.ollama-send-final-btn').click();
       }
     });
-    
+
   } catch (error) {
-    console.error('Erro ao criar modal:', error);
-    showNotification('Erro ao criar modal: ' + error.message, 'error');
+    console.error('Error creating modal:', error);
+    showNotification('Error creating modal: ' + error.message, 'error');
   }
 }
 
@@ -230,45 +230,45 @@ function showPromptModal(text) {
 function showResponseModal(originalText, response, customPrompt = '') {
   const modal = document.createElement('div');
   modal.className = 'ollama-modal';
-  
+
   let promptSection = '';
   if (customPrompt) {
     promptSection = `
-      <div class="ollama-custom-prompt">
-        <h4>Prompt Usado:</h4>
+             <div class="ollama-custom-prompt">
+         <h4>Prompt Used:</h4>
         <p>${customPrompt}</p>
       </div>
     `;
   }
-  
+
   modal.innerHTML = `
     <div class="ollama-modal-content">
-      <div class="ollama-modal-header">
-        <h3>Resposta do Ollama</h3>
+             <div class="ollama-modal-header">
+         <h3>Ollama Response</h3>
         <span class="ollama-close">&times;</span>
       </div>
       <div class="ollama-modal-body">
         ${promptSection}
-        <div class="ollama-original-text">
-          <h4>Texto Original:</h4>
+                 <div class="ollama-original-text">
+           <h4>Original Text:</h4>
           <p>${originalText}</p>
         </div>
-        <div class="ollama-response">
-          <h4>Resposta:</h4>
+                 <div class="ollama-response">
+           <h4>Response:</h4>
           <p>${response}</p>
         </div>
       </div>
       <div class="ollama-modal-footer">
-        <button class="ollama-copy-btn" onclick="navigator.clipboard.writeText('${response.replace(/'/g, "\\'")}')">
-          Copiar Resposta
-        </button>
-        <button class="ollama-close-btn">Fechar</button>
+                 <button class="ollama-copy-btn" onclick="navigator.clipboard.writeText('${response.replace(/'/g, "\\'")}')">
+           Copy Response
+         </button>
+         <button class="ollama-close-btn">Close</button>
       </div>
     </div>
   `;
-  
+
   document.body.appendChild(modal);
-  
+
   // Event listeners para fechar modal
   modal.querySelector('.ollama-close').addEventListener('click', () => modal.remove());
   modal.querySelector('.ollama-close-btn').addEventListener('click', () => modal.remove());
@@ -282,22 +282,22 @@ document.addEventListener('mouseup', (e) => {
   setTimeout(() => {
     const selection = window.getSelection();
     const text = selection.toString().trim();
-    
-    console.log('Texto selecionado:', text, 'length:', text.length);
-    
+
+    // Text selection detection
+
     if (text.length > 0) {
       selectedText = text;
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
-      
+
       // Posição do botão próxima à seleção
       const x = rect.left + (rect.width / 2) - 75; // Centralizar botão
       const y = rect.top + window.scrollY;
-      
-      console.log('Mostrando botão na posição:', x, y);
+
+      // Showing button at position
       showButton(x, y);
     } else {
-      console.log('Nenhum texto selecionado, escondendo botão');
+      // No text selected, hiding button
       hideButton();
     }
   }, 100);
@@ -320,23 +320,23 @@ document.addEventListener('keydown', (e) => {
 // Função para abrir em janela separada
 async function openInWindow(text, prompt = '') {
   try {
-    console.log('Abrindo janela com texto:', text.substring(0, 100) + '...');
-    
+    // Opening window with text
+
     // Configurações padrão
     let settings = {
       ollamaUrl: 'http://192.168.3.70:11434',
       ollamaModel: 'hf.co/unsloth/gemma-3n-E4B-it-GGUF:latest',
       promptTemplate: ''
     };
-    
+
     // Tentar carregar configurações salvas
     try {
       const savedSettings = settings
       settings = { ...settings, ...savedSettings };
     } catch (error) {
-      console.warn('Erro ao carregar configurações na openInWindow:', error);
+      console.warn('Error loading settings in openInWindow:', error);
     }
-    
+
     // Salvar dados no sessionStorage para a nova janela
     const windowData = {
       text: text,
@@ -344,23 +344,23 @@ async function openInWindow(text, prompt = '') {
       timestamp: Date.now(),
       settings: settings // Incluir configurações
     };
-    
+
     sessionStorage.setItem('ollamaWindowData', JSON.stringify(windowData));
-    
+
     // Calcular tamanho da janela
     const width = 800;
     const height = 700;
     const left = (screen.width - width) / 2;
     const top = (screen.height - height) / 2;
-    
+
     // Obter URL da extensão
     let extensionUrl;
     try {
       extensionUrl = chrome.runtime.getURL('window.html');
     } catch (error) {
-      throw new Error('chrome.runtime.getURL não está disponível: ' + error.message);
+             throw new Error('chrome.runtime.getURL is not available: ' + error.message);
     }
-    
+
     // Abrir nova janela
     const windowFeatures = `
       width=${width},
@@ -374,19 +374,19 @@ async function openInWindow(text, prompt = '') {
       location=no,
       status=no
     `.replace(/\s+/g, '');
-    
+
     const newWindow = window.open(extensionUrl, 'ollamaWindow', windowFeatures);
-    
+
     if (newWindow) {
       newWindow.focus();
     } else {
-      throw new Error('Popup bloqueado ou erro ao abrir janela');
+             throw new Error('Popup blocked or error opening window');
     }
-    
+
   } catch (error) {
-    console.error('Erro ao abrir janela:', error);
-    showNotification('Erro ao abrir janela: ' + error.message, 'error');
-    
+    console.error('Error opening window:', error);
+    showNotification('Error opening window: ' + error.message, 'error');
+
     // Fallback: usar modal normal
     showPromptModal(text);
   }
@@ -401,5 +401,5 @@ try {
     }
   });
 } catch (error) {
-  console.warn('Erro ao configurar listener de mensagens:', error);
+  console.warn('Error configuring message listener:', error);
 } 

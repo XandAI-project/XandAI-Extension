@@ -215,54 +215,54 @@
 <body>
   <div class="header">
     <h1>🤖 Ollama Text Sender</h1>
-    <div class="settings-icon" id="settings-toggle" title="Configurações">⚙️</div>
+    <div class="settings-icon" id="settings-toggle" title="Settings">⚙️</div>
   </div>
   
   <div class="settings-panel" id="settings-panel">
     <form id="settings-form">
       <div class="form-group">
-        <label for="ollama-url">URL do Ollama:</label>
+        <label for="ollama-url">Ollama URL:</label>
         <input type="text" id="ollama-url" placeholder="http://192.168.3.70:11434">
       </div>
       
       <div class="form-group">
-        <label for="ollama-model">Modelo:</label>
+        <label for="ollama-model">Model:</label>
         <input type="text" id="ollama-model" placeholder="phi4:latest">
       </div>
       
       <div class="connection-status">
         <div class="status-dot" id="connection-dot"></div>
-        <span id="connection-text">Verificando conexão...</span>
+                 <span id="connection-text">Checking connection...</span>
       </div>
       
       <div class="button-group">
-        <button type="button" id="test-btn" class="btn-secondary">Testar</button>
-        <button type="submit" class="btn-primary">Salvar</button>
+                 <button type="button" id="test-btn" class="btn-secondary">Test</button>
+         <button type="submit" class="btn-primary">Save</button>
       </div>
     </form>
   </div>
   
   <div class="prompt-section">
     <div class="form-group">
-      <label for="prompt-template">Prompt Engineering (opcional):</label>
-      <textarea id="prompt-template" placeholder="Ex: Analise o seguinte texto e responda em português..."></textarea>
+      <label for="prompt-template">Prompt Engineering (optional):</label>
+      <textarea id="prompt-template" placeholder="e.g.: Analyze the following text and respond in English..."></textarea>
     </div>
     
     <div class="button-group">
-      <button type="button" id="save-prompt-btn" class="btn-primary">Salvar Prompt</button>
-      <button type="button" id="clear-prompt-btn" class="btn-danger">Limpar</button>
+              <button type="button" id="save-prompt-btn" class="btn-primary">Save Prompt</button>
+        <button type="button" id="clear-prompt-btn" class="btn-danger">Clear</button>
     </div>
   </div>
   
   <div id="status" class="status" style="display: none;"></div>
   
   <div class="instructions">
-    <h3>Como usar:</h3>
+    <h3>How to use:</h3>
     <p>
-      1. Selecione qualquer texto em uma página web<br>
-      2. Clique no botão "🤖 Enviar para Ollama" que aparece<br>
-      3. Ou use o menu contextual (botão direito)<br>
-      4. Aguarde a resposta do seu LLM!
+      1. Select any text on a web page<br>
+      2. Click the "🤖 Send to Ollama" button that appears<br>
+      3. Or use the context menu (right-click)<br>
+      4. Wait for your LLM response!
     </p>
   </div>
   

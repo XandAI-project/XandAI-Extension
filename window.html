@@ -169,29 +169,29 @@
 </head>
 <body>
   <div class="window-header">
-    <h1>🤖 Enviar para Ollama</h1>
-    <button class="close-btn" onclick="window.close()">✕ Fechar</button>
+    <h1>🤖 Send to Ollama</h1>
+    <button class="close-btn" onclick="window.close()">✕ Close</button>
   </div>
   
   <div class="content-area">
     <div class="section">
-      <h3>Prompt (opcional):</h3>
+      <h3>Prompt (optional):</h3>
       <textarea 
         id="prompt-input" 
         class="prompt-input" 
-        placeholder="Ex: Resuma este texto em 3 pontos principais, traduza para inglês, analise os pontos fortes e fracos..."
+        placeholder="e.g.: Summarize this text in 3 main points, translate to English, analyze strengths and weaknesses..."
       ></textarea>
     </div>
     
     <div class="section">
-      <h3>Texto selecionado:</h3>
+      <h3>Selected text:</h3>
       <div id="selected-text" class="selected-text"></div>
     </div>
   </div>
   
   <div class="actions">
-    <button id="send-btn" class="btn btn-primary">🚀 Enviar para Ollama</button>
-    <button id="cancel-btn" class="btn btn-secondary" onclick="window.close()">Cancelar</button>
+          <button id="send-btn" class="btn btn-primary">🚀 Send to Ollama</button>
+      <button id="cancel-btn" class="btn btn-secondary" onclick="window.close()">Cancel</button>
   </div>
   
   <div id="status" class="status"></div>

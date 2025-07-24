@@ -3,7 +3,7 @@ chrome.runtime.onInstalled.addListener(() => {
   // Criar menu contextual
   chrome.contextMenus.create({
     id: 'sendToOllama',
-    title: 'Enviar para Ollama',
+    title: 'Send to Ollama',
     contexts: ['selection']
   });
   
@@ -70,14 +70,14 @@ async function handleOllamaRequest(requestData) {
     });
     
     if (!response.ok) {
-      throw new Error(`Erro HTTP: ${response.status} - ${response.statusText}`);
+      throw new Error(`HTTP Error: ${response.status} - ${response.statusText}`);
     }
     
     const data = await response.json();
     return data;
     
   } catch (error) {
-    console.error('Erro no background ao fazer request para Ollama:', error);
+    console.error('Background error making request to Ollama:', error);
     throw error;
   }
 }
@@ -94,7 +94,7 @@ async function checkOllamaConnection() {
     const response = await fetch(`${settings.ollamaUrl}/api/tags`);
     return response.ok;
   } catch (error) {
-    console.error('Erro ao conectar com Ollama:', error);
+    console.error('Error connecting to Ollama:', error);
     return false;
   }
 } 

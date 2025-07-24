@@ -1,33 +1,33 @@
-// JavaScript para a janela de prompt do Ollama
+// JavaScript for Ollama prompt window
 let selectedText = '';
 let promptInput;
 let selectedTextDiv;
 let sendBtn;
 let statusDiv;
 
-// Inicializar quando a página carregar
+// Initialize when page loads
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('Window.js carregado');
+  // Window.js loaded
   
   promptInput = document.getElementById('prompt-input');
   selectedTextDiv = document.getElementById('selected-text');
   sendBtn = document.getElementById('send-btn');
   statusDiv = document.getElementById('status');
   
-  // Configurações padrão como fallback
+  // Default settings as fallback
   window.ollamaSettings = {
     ollamaUrl: 'http://192.168.3.70:11434',
     ollamaModel: 'phi4:latest',
     promptTemplate: ''
   };
   
-  // Receber dados da janela pai
+  // Receive data from parent window
   receiveDataFromParent();
   
   // Event listeners
   sendBtn.addEventListener('click', handleSend);
   
-  // Atalhos de teclado
+  // Keyboard shortcuts
   promptInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
       e.preventDefault();
@@ -35,28 +35,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
-  // Focar no prompt
+  // Focus on prompt
   promptInput.focus();
   
-  console.log('Dados carregados:', { 
-    text: selectedText.substring(0, 50) + '...', 
-    settings: window.ollamaSettings 
-  });
+  // Data loaded successfully
 });
 
-// Receber dados da URL ou storage
+// Receive data from URL or storage
 function receiveDataFromParent() {
   try {
-    // Tentar obter dados da URL
+    // Try to get data from URL
     const urlParams = new URLSearchParams(window.location.search);
     const textParam = urlParams.get('text');
     
     if (textParam) {
       selectedText = decodeURIComponent(textParam);
       selectedTextDiv.textContent = selectedText;
-      console.log('Texto recebido via URL');
+      // Text received via URL
     } else {
-      // Tentar obter do sessionStorage como fallback
+      // Try to get from sessionStorage as fallback
       const storedData = sessionStorage.getItem('ollamaWindowData');
       if (storedData) {
         try {
@@ -65,32 +62,32 @@ function receiveDataFromParent() {
           selectedTextDiv.textContent = selectedText;
           promptInput.value = data.prompt || '';
           
-          // Salvar configurações globalmente para uso posterior
+          // Save settings globally for later use
           if (data.settings) {
             window.ollamaSettings = Object.assign(window.ollamaSettings, data.settings);
-            console.log('Configurações recebidas:', data.settings);
+            // Settings received from data
           }
           
-          // Limpar dados após uso
+          // Clear data after use
           sessionStorage.removeItem('ollamaWindowData');
-          console.log('Dados recebidos via sessionStorage');
+          // Data received via sessionStorage
         } catch (parseError) {
-          console.error('Erro ao parsear dados do sessionStorage:', parseError);
+          console.error('Error parsing sessionStorage data:', parseError);
         }
       } else {
-        console.warn('Nenhum dado encontrado em sessionStorage');
+        console.warn('No data found in sessionStorage');
       }
     }
     
     // Verificar se temos texto
     if (!selectedText) {
-      showStatus('Nenhum texto foi fornecido', 'error');
-      selectedTextDiv.textContent = 'Nenhum texto selecionado foi encontrado.';
+      showStatus('No text provided', 'error');
+      selectedTextDiv.textContent = 'No selected text was found.';
     }
     
   } catch (error) {
-    console.error('Erro ao receber dados:', error);
-    showStatus('Erro ao carregar dados', 'error');
+    console.error('Error receiving data:', error);
+    showStatus('Error loading data', 'error');
   }
 }
 
@@ -99,23 +96,23 @@ async function handleSend() {
   const customPrompt = promptInput.value.trim();
   
   if (!selectedText.trim()) {
-    showStatus('Nenhum texto disponível', 'error');
+          showStatus('No text available', 'error');
     return;
   }
   
   try {
-    showStatus('Enviando para Ollama...', 'info');
+         showStatus('Sending to Ollama...', 'info');
     sendBtn.disabled = true;
-    sendBtn.textContent = '🔄 Enviando...';
-    
-    await sendToOllama(selectedText, customPrompt);
-    
-  } catch (error) {
-    console.error('Erro:', error);
-    showStatus('Erro ao enviar: ' + error.message, 'error');
+         sendBtn.textContent = '🔄 Sending...';
+     
+     await sendToOllama(selectedText, customPrompt);
+     
+   } catch (error) {
+     console.error('Error:', error);
+     showStatus('Error sending: ' + error.message, 'error');
   } finally {
     sendBtn.disabled = false;
-    sendBtn.textContent = '🚀 Enviar para Ollama';
+         sendBtn.textContent = '🚀 Send to Ollama';
   }
 }
 
@@ -129,16 +126,16 @@ async function sendToOllama(text, customPrompt = '') {
     const model = settings.ollamaModel || 'phi4:latest';
     const promptTemplate = settings.promptTemplate || '';
     
-    console.log('Usando configurações:', { url, model, promptTemplate: promptTemplate ? 'definido' : 'vazio' });
+    // Using settings for Ollama request
     
     // Construir prompt final
     let finalPrompt = text;
     
     // Prioridade: customPrompt > promptTemplate > texto apenas
-    if (customPrompt.trim()) {
-      finalPrompt = `${customPrompt}\n\nTexto:\n${text}`;
-    } else if (promptTemplate.trim()) {
-      finalPrompt = `${promptTemplate}\n\nTexto:\n${text}`;
+         if (customPrompt.trim()) {
+       finalPrompt = `${customPrompt}\n\nText:\n${text}`;
+     } else if (promptTemplate.trim()) {
+       finalPrompt = `${promptTemplate}\n\nText:\n${text}`;
     }
     
     // Enviar request através do background script
@@ -161,13 +158,13 @@ async function sendToOllama(text, customPrompt = '') {
       });
     });
     
-    showStatus('Resposta recebida!', 'success');
+         showStatus('Response received!', 'success');
     
     // Mostrar resposta
     showResponseInWindow(text, response.response, customPrompt || promptTemplate);
     
   } catch (error) {
-    console.error('Erro ao enviar para Ollama:', error);
+         console.error('Error sending to Ollama:', error);
     throw error;
   }
 }
@@ -177,18 +174,18 @@ function showResponseInWindow(originalText, response, promptUsed) {
   // Criar nova seção para a resposta
   const responseSection = document.createElement('div');
   responseSection.className = 'section';
-  responseSection.innerHTML = `
-    <h3>Resposta do Ollama:</h3>
+     responseSection.innerHTML = `
+     <h3>Ollama Response:</h3>
     <div class="selected-text" style="border-left-color: #238636; background: #0d4427;">
       ${response.replace(/\n/g, '<br>')}
     </div>
     <div style="margin-top: 10px; display: flex; gap: 10px;">
-      <button class="btn btn-secondary" onclick="copyToClipboard('${response.replace(/'/g, "\\'")}')">
-        📋 Copiar Resposta
-      </button>
-      <button class="btn btn-secondary" onclick="showOriginalPrompt()">
-        👁️ Ver Prompt Original
-      </button>
+             <button class="btn btn-secondary" onclick="copyToClipboard('${response.replace(/'/g, "\\'")}')">
+         📋 Copy Response
+       </button>
+       <button class="btn btn-secondary" onclick="showOriginalPrompt()">
+         👁️ View Original Prompt
+       </button>
     </div>
   `;
   
@@ -210,19 +207,19 @@ function showResponseInWindow(originalText, response, promptUsed) {
 // Copiar para clipboard
 function copyToClipboard(text) {
   navigator.clipboard.writeText(text).then(() => {
-    showStatus('Resposta copiada!', 'success');
+         showStatus('Response copied!', 'success');
   }).catch(err => {
-    console.error('Erro ao copiar:', err);
-    showStatus('Erro ao copiar', 'error');
+         console.error('Error copying:', err);
+     showStatus('Error copying', 'error');
   });
 }
 
 // Mostrar prompt original usado
 function showOriginalPrompt() {
   if (window.ollamaData && window.ollamaData.promptUsed) {
-    alert(`Prompt usado:\n\n${window.ollamaData.promptUsed}`);
-  } else {
-    alert('Nenhum prompt personalizado foi usado.');
+         alert(`Prompt used:\n\n${window.ollamaData.promptUsed}`);
+   } else {
+     alert('No custom prompt was used.');
   }
 }
 

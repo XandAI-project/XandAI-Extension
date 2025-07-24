@@ -1,4 +1,4 @@
-// Elementos do DOM
+// DOM elements
 const form = document.getElementById('settings-form');
 const urlInput = document.getElementById('ollama-url');
 const modelInput = document.getElementById('ollama-model');
@@ -12,7 +12,7 @@ const promptTemplate = document.getElementById('prompt-template');
 const savePromptBtn = document.getElementById('save-prompt-btn');
 const clearPromptBtn = document.getElementById('clear-prompt-btn');
 
-// Carregar configurações salvas
+// Load saved settings
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     const settings = await chrome.storage.sync.get(['ollamaUrl', 'ollamaModel', 'promptTemplate']);
@@ -21,43 +21,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     modelInput.value = settings.ollamaModel || 'phi4:latest';
     promptTemplate.value = settings.promptTemplate || '';
     
-    // Testar conexão automaticamente
+    // Test connection automatically
     await testConnection(false);
   } catch (error) {
-    console.error('Erro ao carregar configurações:', error);
-    showStatus('Erro ao carregar configurações', 'error');
+    console.error('Error loading settings:', error);
+    showStatus('Error loading settings', 'error');
   }
 });
 
-// Toggle das configurações
+// Toggle settings panel
 settingsToggle.addEventListener('click', () => {
   settingsPanel.classList.toggle('show');
 });
 
-// Salvar prompt template
+// Save prompt template
 savePromptBtn.addEventListener('click', async () => {
   try {
     await chrome.storage.sync.set({ promptTemplate: promptTemplate.value });
-    showStatus('Prompt salvo!', 'success');
+    showStatus('Prompt saved!', 'success');
   } catch (error) {
-    console.error('Erro ao salvar prompt:', error);
-    showStatus('Erro ao salvar prompt', 'error');
+    console.error('Error saving prompt:', error);
+    showStatus('Error saving prompt', 'error');
   }
 });
 
-// Limpar prompt template
+// Clear prompt template
 clearPromptBtn.addEventListener('click', async () => {
   promptTemplate.value = '';
   try {
     await chrome.storage.sync.set({ promptTemplate: '' });
-    showStatus('Prompt limpo!', 'info');
+    showStatus('Prompt cleared!', 'info');
   } catch (error) {
-    console.error('Erro ao limpar prompt:', error);
-    showStatus('Erro ao limpar prompt', 'error');
+    console.error('Error clearing prompt:', error);
+    showStatus('Error clearing prompt', 'error');
   }
 });
 
-// Salvar configurações
+// Save settings
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   
@@ -66,42 +66,42 @@ form.addEventListener('submit', async (e) => {
     ollamaModel: modelInput.value.trim()
   };
   
-  // Validar URL
+  // Validate URL
   if (!isValidUrl(settings.ollamaUrl)) {
-    showStatus('URL inválida', 'error');
+    showStatus('Invalid URL', 'error');
     return;
   }
   
   try {
     await chrome.storage.sync.set(settings);
-    showStatus('Configurações salvas!', 'success');
+    showStatus('Settings saved!', 'success');
     
-    // Testar conexão após salvar
+    // Test connection after saving
     setTimeout(() => testConnection(false), 1000);
   } catch (error) {
-    console.error('Erro ao salvar:', error);
-    showStatus('Erro ao salvar configurações', 'error');
+    console.error('Error saving:', error);
+    showStatus('Error saving settings', 'error');
   }
 });
 
-// Testar conexão
+// Test connection
 testBtn.addEventListener('click', () => testConnection(true));
 
-// Função para testar conexão com Ollama
+// Function to test connection with Ollama
 async function testConnection(showResult = true) {
   const url = urlInput.value.trim();
   
   if (!isValidUrl(url)) {
-    updateConnectionStatus(false, 'URL inválida');
-    if (showResult) showStatus('URL inválida', 'error');
+    updateConnectionStatus(false, 'Invalid URL');
+    if (showResult) showStatus('Invalid URL', 'error');
     return;
   }
   
   try {
-    updateConnectionStatus(null, 'Testando...');
-    if (showResult) showStatus('Testando conexão...', 'info');
+    updateConnectionStatus(null, 'Testing...');
+    if (showResult) showStatus('Testing connection...', 'info');
     
-    // Testar endpoint de saúde
+    // Test health endpoint
     const response = await fetch(`${url}/api/tags`, {
       method: 'GET',
       headers: {
@@ -113,38 +113,38 @@ async function testConnection(showResult = true) {
       const data = await response.json();
       const modelCount = data.models ? data.models.length : 0;
       
-      updateConnectionStatus(true, `Conectado (${modelCount} modelos)`);
+      updateConnectionStatus(true, `Connected (${modelCount} models)`);
       if (showResult) {
-        showStatus(`Conexão bem-sucedida! ${modelCount} modelos disponíveis`, 'success');
+        showStatus(`Connection successful! ${modelCount} models available`, 'success');
       }
       
-      // Verificar se o modelo especificado existe
+      // Check if specified model exists
       if (data.models && modelInput.value.trim()) {
         const modelExists = data.models.some(m => 
           m.name.includes(modelInput.value.trim())
         );
         
         if (!modelExists && showResult) {
-          showStatus(`Aviso: Modelo "${modelInput.value}" não encontrado`, 'error');
+          showStatus(`Warning: Model "${modelInput.value}" not found`, 'error');
         }
       }
     } else {
       throw new Error(`HTTP ${response.status}`);
     }
   } catch (error) {
-    console.error('Erro de conexão:', error);
-    updateConnectionStatus(false, 'Desconectado');
+    console.error('Connection error:', error);
+    updateConnectionStatus(false, 'Disconnected');
     
     if (showResult) {
       const errorMsg = error.message.includes('NetworkError') || error.message.includes('fetch') 
-        ? 'Não foi possível conectar. Verifique se o Ollama está rodando.'
-        : `Erro: ${error.message}`;
+        ? 'Could not connect. Check if Ollama is running.'
+        : `Error: ${error.message}`;
       showStatus(errorMsg, 'error');
     }
   }
 }
 
-// Atualizar status de conexão visual
+// Update visual connection status
 function updateConnectionStatus(isOnline, text) {
   connectionText.textContent = text;
   connectionDot.className = 'status-dot';
@@ -154,22 +154,22 @@ function updateConnectionStatus(isOnline, text) {
   } else if (isOnline === false) {
     connectionDot.classList.add('offline');
   }
-  // Se isOnline for null, não adiciona classe (estado neutro)
+  // If isOnline is null, no class is added (neutral state)
 }
 
-// Mostrar mensagem de status
+// Show status message
 function showStatus(message, type) {
   statusDiv.textContent = message;
   statusDiv.className = `status ${type}`;
   statusDiv.style.display = 'block';
   
-  // Auto-hide após 3 segundos
+  // Auto-hide after 3 seconds
   setTimeout(() => {
     statusDiv.style.display = 'none';
   }, 3000);
 }
 
-// Validar URL
+// Validate URL
 function isValidUrl(string) {
   try {
     const url = new URL(string);
@@ -179,14 +179,14 @@ function isValidUrl(string) {
   }
 }
 
-// Listener para mudanças na URL (testar automaticamente)
+// Listener for URL changes (test automatically)
 urlInput.addEventListener('blur', () => {
   if (urlInput.value.trim() && isValidUrl(urlInput.value.trim())) {
     testConnection(false);
   }
 });
 
-// Atalhos de teclado
+// Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
   if (e.ctrlKey && e.key === 's') {
     e.preventDefault();
