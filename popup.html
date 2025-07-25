@@ -206,15 +206,119 @@
     .settings-panel.show {
       display: block;
     }
-    
-    .prompt-section {
+
+    .model-management {
       margin-bottom: 20px;
+      padding: 15px;
+      background: #161b22;
+      border-radius: 8px;
+      border: 1px solid #30363d;
+    }
+
+    .model-management h3 {
+      margin: 0 0 15px 0;
+      color: #58a6ff;
+      font-size: 16px;
+    }
+
+    .model-list {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #30363d;
+      border-radius: 6px;
+      background: #0d1117;
+    }
+
+    .model-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      border-bottom: 1px solid #30363d;
+      font-size: 13px;
+    }
+
+    .model-item:last-child {
+      border-bottom: none;
+    }
+
+    .model-item:hover {
+      background: #21262d;
+    }
+
+    .model-name {
+      flex: 1;
+      color: #e6edf3;
+      font-family: 'SFMono-Regular', Monaco, 'Cascadia Code', monospace;
+    }
+
+    .model-size {
+      color: #7d8590;
+      font-size: 11px;
+      margin-right: 10px;
+    }
+
+    .model-delete-btn {
+      background: #da3633;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .model-delete-btn:hover {
+      background: #e5534b;
+    }
+
+    .model-delete-btn:disabled {
+      background: #6e7681;
+      cursor: not-allowed;
+    }
+
+    .model-list-loading, .model-list-empty {
+      padding: 20px;
+      text-align: center;
+      color: #7d8590;
+      font-size: 12px;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #21262d;
+      border-radius: 3px;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: #238636;
+      border-radius: 3px;
+      transition: width 0.3s ease;
+      width: 0%;
+    }
+
+    .model-management-toggle {
+      cursor: pointer;
+      color: #7d8590;
+      font-size: 12px;
+      text-decoration: underline;
+      margin-top: 10px;
+      display: block;
+    }
+
+    .model-management-toggle:hover {
+      color: #58a6ff;
     }
   </style>
 </head>
 <body>
   <div class="header">
-    <h1>🤖 Ollama Text Sender</h1>
+    <h1>🤖 XandAI</h1>
     <div class="settings-icon" id="settings-toggle" title="Settings">⚙️</div>
   </div>
   
@@ -243,18 +347,38 @@
       </div>
     </form>
   </div>
-  
-  <div class="prompt-section">
-    <div class="form-group">
-      <label for="prompt-template">Prompt Engineering (optional):</label>
-      <textarea id="prompt-template" placeholder="e.g.: Analyze the following text and respond in English..."></textarea>
-    </div>
+
+  <div class="model-management" id="model-management" style="display: none;">
+    <h3>Model Management</h3>
     
-    <div class="button-group">
-              <button type="button" id="save-prompt-btn" class="btn-primary">Save Prompt</button>
-        <button type="button" id="clear-prompt-btn" class="btn-danger">Clear</button>
+          <div class="form-group">
+        <label for="model-pull-input">Pull New Model:</label>
+        <div style="display: flex; gap: 10px;">
+          <input type="text" id="model-pull-input" placeholder="e.g., llama2, mistral, theBloke/Llama-2-7B-Chat-GGUF">
+          <button type="button" id="pull-model-btn" class="btn-primary">Pull</button>
+        </div>
+        <div style="font-size: 11px; color: #7d8590; margin-top: 5px;">
+          💡 Tip: HuggingFace models (username/model) automatically get "hf.co/" prefix
+        </div>
+        <div id="pull-progress-container" style="display: none; margin-top: 10px;">
+          <div class="progress-bar">
+            <div id="pull-progress-fill" class="progress-bar-fill"></div>
+          </div>
+          <div id="pull-progress-text" style="font-size: 12px; color: #7d8590; margin-top: 5px;"></div>
+        </div>
+      </div>
+
+    <div class="form-group">
+      <label>Installed Models:</label>
+      <div id="model-list" class="model-list">
+        <div class="model-list-loading">Loading models...</div>
+      </div>
     </div>
+
+    <div id="model-operation-status" class="status" style="display: none;"></div>
   </div>
+  
+
   
   <div id="status" class="status" style="display: none;"></div>
   
@@ -262,10 +386,11 @@
     <h3>How to use:</h3>
     <p>
       1. Select any text on a web page<br>
-      2. Click the "🤖 Send to Ollama" button that appears<br>
+             2. Click the "🤖 Send to XandAI" button that appears<br>
       3. Or use the context menu (right-click)<br>
       4. Wait for your LLM response!
     </p>
+    <span class="model-management-toggle" id="model-management-toggle">🔧 Manage Models</span>
   </div>
   
   <script src="popup.js"></script>

@@ -79,7 +79,7 @@ function receiveDataFromParent() {
       }
     }
     
-    // Verificar se temos texto
+    // Check if we have text
     if (!selectedText) {
       showStatus('No text provided', 'error');
       selectedTextDiv.textContent = 'No selected text was found.';
@@ -91,7 +91,7 @@ function receiveDataFromParent() {
   }
 }
 
-// Manipular envio para Ollama
+// Handle sending to Ollama
 async function handleSend() {
   const customPrompt = promptInput.value.trim();
   
@@ -112,26 +112,26 @@ async function handleSend() {
      showStatus('Error sending: ' + error.message, 'error');
   } finally {
     sendBtn.disabled = false;
-         sendBtn.textContent = '🚀 Send to Ollama';
+         sendBtn.textContent = '🚀 Send to XandAI';
   }
 }
 
-// Função para enviar texto para Ollama
+// Function to send text to Ollama
 async function sendToOllama(text, customPrompt = '') {
   try {
-    // Usar configurações salvas ou padrões
+    // Use saved settings or defaults
     const settings = window.ollamaSettings || {};
     
-    const url = settings.ollamaUrl || 'http://192.168.3.70:11434';
-    const model = settings.ollamaModel || 'phi4:latest';
+    const url = settings.ollamaUrl || 'http://localhost:11434';
+    const model = settings.ollamaModel || '';
     const promptTemplate = settings.promptTemplate || '';
     
     // Using settings for Ollama request
     
-    // Construir prompt final
+    // Build final prompt
     let finalPrompt = text;
     
-    // Prioridade: customPrompt > promptTemplate > texto apenas
+    // Priority: customPrompt > promptTemplate > text only
          if (customPrompt.trim()) {
        finalPrompt = `${customPrompt}\n\nText:\n${text}`;
      } else if (promptTemplate.trim()) {

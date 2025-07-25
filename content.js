@@ -4,20 +4,34 @@
 let selectionButton = null;
 let selectedText = '';
 
-// Function to create send button
+// Function to create send button with options
 function createSendButton() {
-  const button = document.createElement('div');
-  button.id = 'ollama-send-button';
-  button.innerHTML = '🤖 Send to Ollama';
-  button.className = 'ollama-send-btn';
+  const container = document.createElement('div');
+  container.id = 'ollama-send-button-container';
+  container.className = 'ollama-send-container';
 
-  button.addEventListener('click', async (e) => {
+  container.innerHTML = `
+    <div class="ollama-send-btn-group">
+      <button class="ollama-send-btn ollama-send-text" title="Send selected text">
+        🤖 Text
+      </button>
+      <button class="ollama-send-btn ollama-send-html" title="Send HTML element">
+        📝 HTML
+      </button>
+      <button class="ollama-send-btn ollama-send-page" title="Send full page">
+        📄 Page
+      </button>
+    </div>
+  `;
+
+  // Event listeners for each button
+  container.querySelector('.ollama-send-text').addEventListener('click', async (e) => {
     e.stopPropagation();
     e.preventDefault();
 
     if (selectedText.trim()) {
       try {
-        showPromptModal(selectedText);
+        showPromptModal(selectedText, 'Selected Text');
         hideButton();
       } catch (error) {
         console.error('Error showing modal:', error);
@@ -28,7 +42,39 @@ function createSendButton() {
     }
   });
 
-  return button;
+  container.querySelector('.ollama-send-html').addEventListener('click', async (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    try {
+      const elementHtml = getSelectedElementHtml();
+      if (elementHtml) {
+        showPromptModal(elementHtml, 'HTML Element');
+        hideButton();
+      } else {
+        showNotification('Could not capture HTML element', 'error');
+      }
+    } catch (error) {
+      console.error('Error getting HTML element:', error);
+      showNotification('Error capturing HTML element', 'error');
+    }
+  });
+
+  container.querySelector('.ollama-send-page').addEventListener('click', async (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    try {
+      const pageHtml = getFullPageHtml();
+      showPromptModal(pageHtml, 'Full Page HTML');
+      hideButton();
+    } catch (error) {
+      console.error('Error getting page HTML:', error);
+      showNotification('Error capturing page HTML', 'error');
+    }
+  });
+
+  return container;
 }
 
 // Function to show button near selection
@@ -57,85 +103,264 @@ function hideButton() {
   }
 }
 
-// Função para enviar texto para Ollama
-async function sendToOllama(text, customPrompt = '') {
-  try {
-    showNotification('Sending to Ollama...', 'info');
+ // Global variables for request queue
+ let requestQueue = [];
+ let isProcessing = false;
+ let currentToastId = null;
 
-    // Try to load saved settings from storage
-    let settings = {};
+ // Function to process request queue
+ async function processRequestQueue() {
+   if (isProcessing || requestQueue.length === 0) {
+     return;
+   }
+
+   isProcessing = true;
+   const request = requestQueue.shift();
+   
+   // Update toast with new queue count
+   updateToastQueue();
+
+   try {
+     await executeOllamaRequest(request);
+   } catch (error) {
+     console.error('Error processing request:', error);
+     showNotification('Error processing request: ' + error.message, 'error');
+   } finally {
+     isProcessing = false;
+     
+     // Process next request in queue
+     if (requestQueue.length > 0) {
+       setTimeout(processRequestQueue, 100);
+     }
+   }
+ }
+
+   // Function to add request to queue
+  function addToQueue(text, customPrompt = '', contentType = 'text') {
+    const request = {
+      id: Date.now() + Math.random(),
+      text,
+      customPrompt,
+      contentType,
+      timestamp: Date.now()
+    };
+
+    requestQueue.push(request);
     
-    try {
-      settings = await new Promise((resolve) => {
-        chrome.storage.sync.get(['ollamaUrl', 'ollamaModel', 'promptTemplate'], (result) => {
-          resolve({
-            ollamaUrl: result.ollamaUrl || 'http://localhost:11434',
-            ollamaModel: result.ollamaModel || '',
-            promptTemplate: result.promptTemplate || ''
+    // Update toast with new queue count
+    updateToastQueue();
+    
+        // Show queue status
+     if (requestQueue.length > 1) {
+       showNotification(`Request added to queue (${requestQueue.length} requests pending)`, 'info');
+     }
+
+    // Start processing
+    processRequestQueue();
+  }
+
+       // Function to show persistent toast notification
+   function showPersistentToast(message, promptPreview = '') {
+     // Remove existing toast
+     if (currentToastId) {
+       const existing = document.getElementById(currentToastId);
+       if (existing) existing.remove();
+     }
+
+     currentToastId = 'ollama-toast-' + Date.now();
+     const toast = document.createElement('div');
+     toast.id = currentToastId;
+     toast.className = 'ollama-toast-sending';
+     
+     const displayText = promptPreview ? 
+       `Sending: "${promptPreview.substring(0, 50)}${promptPreview.length > 50 ? '...' : ''}"` : 
+       message;
+     
+     // Add queue information if there are items in queue
+     const queueText = requestQueue.length > 0 ? `\nQueued: ${requestQueue.length}` : '';
+     
+     toast.textContent = displayText + queueText;
+     document.body.appendChild(toast);
+     
+     return currentToastId;
+   }
+
+     // Function to hide persistent toast
+   function hidePersistentToast() {
+     if (currentToastId) {
+       const toast = document.getElementById(currentToastId);
+       if (toast) toast.remove();
+       currentToastId = null;
+     }
+   }
+
+   // Function to update toast with current queue status
+   function updateToastQueue() {
+     if (currentToastId) {
+       const toast = document.getElementById(currentToastId);
+       if (toast) {
+         const currentText = toast.textContent;
+         const sendingPart = currentText.split('\n')[0]; // Get the "Sending:" part
+         const queueText = requestQueue.length > 0 ? `\nQueued: ${requestQueue.length}` : '';
+         toast.textContent = sendingPart + queueText;
+       }
+     }
+   }
+
+// Main function to send text to Ollama (now uses queue)
+async function sendToOllama(text, customPrompt = '') {
+  addToQueue(text, customPrompt, 'text');
+}
+
+ // Function to execute Ollama request
+ async function executeOllamaRequest(request) {
+   const { text, customPrompt } = request;
+   
+   try {
+     // Try to load saved settings from storage
+     let settings = {};
+     
+     try {
+       settings = await new Promise((resolve, reject) => {
+         chrome.storage.sync.get(['ollamaUrl', 'ollamaModel'], (result) => {
+           if (chrome.runtime.lastError) {
+             reject(new Error(chrome.runtime.lastError.message));
+             return;
+           }
+           
+           console.log('Content script loaded settings:', result); // Debug log
+           
+           resolve({
+             ollamaUrl: result.ollamaUrl || 'http://localhost:11434',
+             ollamaModel: result.ollamaModel || ''
+           });
+         });
+       });
+     } catch (error) {
+       console.warn('Error loading settings, using defaults:', error);
+       settings = {
+         ollamaUrl: 'http://localhost:11434',
+         ollamaModel: ''
+       };
+     }
+
+     const url = settings.ollamaUrl;
+     const model = settings.ollamaModel;
+
+     console.log('About to send with model:', model); // Debug log
+
+     // Check if model is selected (trim to handle whitespace)
+     if (!model || model.trim() === '') {
+       throw new Error('No model selected. Please select a model in the extension settings.');
+     }
+
+     // Build final prompt
+     let finalPrompt = text;
+
+     // Priority: customPrompt > text only
+     if (customPrompt.trim()) {
+       finalPrompt = `${customPrompt}\n\nText:\n${text}`;
+     }
+
+     // Show persistent toast with prompt preview
+     const promptPreview = customPrompt.trim() || 'Processing content';
+     showPersistentToast('Sending to XandAI...', promptPreview);
+
+           // Send request through background script (normal mode)
+      const response = await new Promise((resolve, reject) => {
+        try {
+          chrome.runtime.sendMessage({
+            action: 'sendToOllama',
+            data: {
+              url: url,
+              model: model,
+              prompt: finalPrompt
+            }
+          }, (response) => {
+            if (chrome.runtime.lastError) {
+              reject(new Error(chrome.runtime.lastError.message));
+            } else if (response?.success) {
+              resolve(response.data);
+            } else {
+              reject(new Error(response?.error || 'Invalid response from background script'));
+            }
           });
-        });
+        } catch (error) {
+          reject(new Error('Error sending message to background: ' + error.message));
+        }
       });
-    } catch (error) {
-      console.warn('Error loading settings, using defaults:', error);
-      settings = {
-        ollamaUrl: 'http://localhost:11434',
-        ollamaModel: '',
-        promptTemplate: ''
-      };
-    }
 
-    const url = settings.ollamaUrl;
-    const model = settings.ollamaModel;
-    const promptTemplate = settings.promptTemplate;
+           // Hide persistent toast
+      hidePersistentToast();
 
-    // Check if model is selected
-    if (!model) {
-      throw new Error('No model selected. Please select a model in the extension settings.');
-    }
+      showNotification('Response received from XandAI!', 'success');
 
-    // Build final prompt
-    let finalPrompt = text;
+      // Save to history with the complete response
+      await saveToHistory(text, customPrompt, response.response, request.contentType || 'text');
 
-    // Priority: customPrompt > promptTemplate > text only
-    if (customPrompt.trim()) {
-      finalPrompt = `${customPrompt}\n\nText:\n${text}`;
-    } else if (promptTemplate.trim()) {
-      finalPrompt = `${promptTemplate}\n\nText:\n${text}`;
-    }
+      // Show response in modal
+      showResponseModal(text, response.response, customPrompt);
 
-    // Send request through background script
-    const response = await new Promise((resolve, reject) => {
-      try {
-        chrome.runtime.sendMessage({
-          action: 'sendToOllama',
-          data: {
-            url: url,
-            model: model,
-            prompt: finalPrompt
-          }
-        }, (response) => {
-          if (chrome.runtime.lastError) {
-            reject(new Error(chrome.runtime.lastError.message));
-          } else if (response?.success) {
-            resolve(response.data);
-          } else {
-            reject(new Error(response?.error || 'Invalid response from background script'));
-          }
-        });
-      } catch (error) {
-        reject(new Error('Error sending message to background: ' + error.message));
-      }
+   } catch (error) {
+     console.error('Error sending to Ollama:', error);
+     hidePersistentToast();
+     showNotification('Error connecting to Ollama: ' + error.message, 'error');
+   }
+ }
+
+// Function to save conversation to history
+async function saveToHistory(originalText, customPrompt, response, contentType) {
+  try {
+    const timestamp = new Date().toISOString();
+    const conversationId = Date.now() + Math.random().toString(36).substr(2, 9);
+    
+    const historyEntry = {
+      id: conversationId,
+      timestamp: timestamp,
+      originalText: originalText,
+      customPrompt: customPrompt || '',
+      response: response,
+      contentType: contentType,
+      url: window.location.href,
+      title: document.title
+    };
+
+    // Get existing history
+    const result = await new Promise((resolve, reject) => {
+      chrome.storage.local.get(['conversationHistory'], (data) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+        } else {
+          resolve(data);
+        }
+      });
     });
 
-    showNotification('Response received from Ollama!', 'success');
+    const history = result.conversationHistory || [];
+    
+    // Add new entry to beginning of array
+    history.unshift(historyEntry);
+    
+    // Keep only last 100 conversations to avoid storage limits
+    if (history.length > 100) {
+      history.splice(100);
+    }
 
-    // Show response in modal
-    const promptUsed = customPrompt || promptTemplate;
-    showResponseModal(text, response.response, promptUsed);
+    // Save updated history
+    await new Promise((resolve, reject) => {
+      chrome.storage.local.set({ conversationHistory: history }, () => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+        } else {
+          console.log('Conversation saved to history:', conversationId);
+          resolve();
+        }
+      });
+    });
 
   } catch (error) {
-    console.error('Error sending to Ollama:', error);
-    showNotification('Error connecting to Ollama: ' + error.message, 'error');
+    console.error('Error saving to history:', error);
+    // Don't throw - history saving shouldn't block the main flow
   }
 }
 
@@ -153,30 +378,50 @@ function showNotification(message, type = 'info') {
 }
 
 // Function to show custom prompt modal
-function showPromptModal(text) {
+function showPromptModal(text, contentType = 'Selected Text') {
       // Modal creation for text prompt
 
   try {
     const modal = document.createElement('div');
     modal.className = 'ollama-modal';
 
-    // Escape HTML to avoid issues
-    const escapedText = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    // Handle content differently based on type
+    let displayContent = '';
+    let placeholderText = '';
+    
+    if (contentType === 'HTML Element') {
+      // For HTML content, show in a code block with syntax highlighting
+      const escapedHtml = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      displayContent = `<pre class="ollama-html-content"><code>${escapedHtml}</code></pre>`;
+      placeholderText = 'e.g.: Analyze this HTML structure and suggest improvements...';
+    } else if (contentType === 'Full Page HTML') {
+      // For full page, show truncated version
+      const truncatedHtml = text.length > 2000 ? 
+        text.substring(0, 2000) + '...\n\n[Content truncated - full HTML will be sent to AI]' : text;
+      const escapedHtml = truncatedHtml.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      displayContent = `<pre class="ollama-html-content"><code>${escapedHtml}</code></pre>`;
+      placeholderText = 'e.g.: Review this webpage structure, identify SEO issues, or analyze the code quality...';
+    } else {
+      // Regular text content
+      const escapedText = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      displayContent = `<div class="ollama-selected-text">${escapedText}</div>`;
+      placeholderText = 'e.g.: Summarize this text in 3 main points...';
+    }
 
     modal.innerHTML = `
       <div class="ollama-modal-content">
         <div class="ollama-modal-header">
-          <h3>🤖 Send to Ollama</h3>
+          <h3>🤖 Send to XandAI</h3>
           <span class="ollama-close">&times;</span>
         </div>
         <div class="ollama-modal-body">
                      <div class="ollama-prompt-section">
              <h4>Prompt (optional):</h4>
-             <textarea class="ollama-prompt-input" placeholder="e.g.: Summarize this text in 3 main points..."></textarea>
+             <textarea class="ollama-prompt-input" placeholder="${placeholderText}"></textarea>
            </div>
            <div class="ollama-text-section">
-             <h4>Selected text:</h4>
-            <div class="ollama-selected-text">${escapedText}</div>
+             <h4>${contentType}:</h4>
+            ${displayContent}
           </div>
         </div>
                  <div class="ollama-modal-footer">
@@ -201,13 +446,21 @@ function showPromptModal(text) {
       if (e.target === modal) modal.remove();
     });
 
-    // Send custom prompt
-    modal.querySelector('.ollama-send-final-btn').addEventListener('click', async () => {
-      const customPrompt = promptInput.value.trim();
-      // Sending with custom prompt
-      modal.remove();
-      await sendToOllama(text, customPrompt);
-    });
+         // Send custom prompt
+     modal.querySelector('.ollama-send-final-btn').addEventListener('click', async () => {
+       const customPrompt = promptInput.value.trim();
+       // Sending with custom prompt
+       modal.remove();
+       
+       // Route to appropriate function based on content type
+       if (contentType === 'HTML Element') {
+         sendHtmlToOllama(text, customPrompt);
+       } else if (contentType === 'Full Page HTML') {
+         sendPageToOllama(text, customPrompt);
+       } else {
+         sendToOllama(text, customPrompt);
+       }
+     });
 
     // Open in separate window
     modal.querySelector('.ollama-window-btn').addEventListener('click', async () => {
@@ -256,7 +509,7 @@ function showResponseModal(originalText, response, customPrompt = '') {
   modal.innerHTML = `
     <div class="ollama-modal-content">
              <div class="ollama-modal-header">
-         <h3>Ollama Response</h3>
+         <h3>XandAI Response</h3>
         <span class="ollama-close">&times;</span>
       </div>
       <div class="ollama-modal-body">
@@ -339,11 +592,11 @@ async function openInWindow(text, prompt = '') {
     
     try {
       settings = await new Promise((resolve) => {
-        chrome.storage.sync.get(['ollamaUrl', 'ollamaModel', 'promptTemplate'], (result) => {
+        chrome.storage.sync.get(['ollamaUrl', 'ollamaModel'], (result) => {
           resolve({
             ollamaUrl: result.ollamaUrl || 'http://localhost:11434',
             ollamaModel: result.ollamaModel || '',
-            promptTemplate: result.promptTemplate || ''
+            promptTemplate: ''
           });
         });
       });
@@ -411,14 +664,120 @@ async function openInWindow(text, prompt = '') {
   }
 }
 
-// Listener para mensagens do background (menu contextual)
-try {
-  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.action === 'sendToOllama' && request.text) {
-      showPromptModal(request.text);
-      sendResponse({ success: true });
+
+
+// Function to get conversation history
+async function getConversationHistory() {
+  try {
+    const result = await new Promise((resolve, reject) => {
+      chrome.storage.local.get(['conversationHistory'], (data) => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+        } else {
+          resolve(data);
+        }
+      });
+    });
+
+    return result.conversationHistory || [];
+  } catch (error) {
+    console.error('Error getting conversation history:', error);
+    return [];
+  }
+}
+
+// Function to clear conversation history
+async function clearConversationHistory() {
+  try {
+    await new Promise((resolve, reject) => {
+      chrome.storage.local.remove(['conversationHistory'], () => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+        } else {
+          resolve();
+        }
+      });
+    });
+    
+    showNotification('Histórico de conversas limpo!', 'success');
+  } catch (error) {
+    console.error('Error clearing conversation history:', error);
+    showNotification('Erro ao limpar histórico', 'error');
+  }
+}
+
+// Function to get HTML element containing the selection
+function getSelectedElementHtml() {
+  try {
+    const selection = window.getSelection();
+    if (selection.rangeCount > 0) {
+      const range = selection.getRangeAt(0);
+      const commonAncestor = range.commonAncestorContainer;
+      
+      // Find the closest element node
+      let element = commonAncestor;
+      if (element.nodeType === Node.TEXT_NODE) {
+        element = element.parentElement;
+      }
+      
+      // Get the outerHTML of the containing element
+      return element.outerHTML;
     }
-  });
-} catch (error) {
-  console.warn('Error configuring message listener:', error);
-} 
+    return null;
+  } catch (error) {
+    console.error('Error getting selected element HTML:', error);
+    return null;
+  }
+}
+
+// Function to get full page HTML
+function getFullPageHtml() {
+  try {
+    // Get the complete HTML including DOCTYPE
+    const doctype = document.doctype ? 
+      '<!DOCTYPE ' + document.doctype.name + '>' : '';
+    return doctype + document.documentElement.outerHTML;
+  } catch (error) {
+    console.error('Error getting full page HTML:', error);
+    return document.documentElement.outerHTML;
+  }
+}
+
+ // Update modal to support queue system
+ function showPromptModalWithQueue(text, contentType = 'Selected Text') {
+   showPromptModal(text, contentType);
+ }
+
+ // Update sendToOllama function for HTML content
+ function sendHtmlToOllama(text, customPrompt = '') {
+   addToQueue(text, customPrompt, 'html');
+ }
+
+ // Update sendToOllama function for page content
+ function sendPageToOllama(text, customPrompt = '') {
+   addToQueue(text, customPrompt, 'page');
+ }
+
+ // Listener para mensagens do background (menu contextual)
+ try {
+   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+     if (request.action === 'sendToOllama' && request.text) {
+       showPromptModalWithQueue(request.text, 'Selected Text');
+       sendResponse({ success: true });
+     } else if (request.action === 'sendHtmlToOllama' && request.text) {
+       const elementHtml = getSelectedElementHtml();
+       if (elementHtml) {
+         showPromptModalWithQueue(elementHtml, 'HTML Element');
+       } else {
+         showNotification('Could not capture HTML element', 'error');
+       }
+       sendResponse({ success: true });
+     } else if (request.action === 'sendPageToOllama') {
+       const pageHtml = getFullPageHtml();
+       showPromptModalWithQueue(pageHtml, 'Full Page HTML');
+       sendResponse({ success: true });
+     }
+   });
+ } catch (error) {
+   console.warn('Error configuring message listener:', error);
+ } 

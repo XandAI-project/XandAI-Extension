@@ -1,19 +1,32 @@
-/* Botão de envio para Ollama */
-.ollama-send-btn {
+/* Send Button Container */
+.ollama-send-container {
   position: absolute;
+  z-index: 10000;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.ollama-send-btn-group {
+  display: flex;
+  gap: 2px;
+  background: rgba(0, 0, 0, 0.8);
+  border-radius: 20px;
+  padding: 2px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+
+/* Individual send buttons */
+.ollama-send-btn {
   background: linear-gradient(135deg, #1f6feb 0%, #0d2636 100%);
   color: #e6edf3;
   border: 1px solid #30363d;
-  border-radius: 20px;
-  padding: 8px 16px;
-  font-size: 12px;
+  border-radius: 16px;
+  padding: 6px 12px;
+  font-size: 11px;
   font-weight: bold;
   cursor: pointer;
-  z-index: 10000;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
   transition: all 0.3s ease;
   user-select: none;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  white-space: nowrap;
 }
 
 .ollama-send-btn:hover {
@@ -27,6 +40,8 @@
   transform: translateY(0);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
+
+
 
 /* Notificações */
 .ollama-notification {
@@ -306,4 +321,255 @@
     transform: scale(1);
     opacity: 1;
   }
+}
+
+/* HTML Content Display Styles */
+.ollama-html-content {
+  background: #1c2128;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  padding: 16px;
+  margin: 0;
+  overflow: auto;
+  max-height: 300px;
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #e6edf3;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.ollama-html-content code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+/* Scrollbar styling for HTML content */
+.ollama-html-content::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.ollama-html-content::-webkit-scrollbar-track {
+  background: #21262d;
+  border-radius: 4px;
+}
+
+.ollama-html-content::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 4px;
+}
+
+.ollama-html-content::-webkit-scrollbar-thumb:hover {
+  background: #484f58;
+}
+
+/* Progress Bar for Ollama Requests */
+.ollama-progress-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 300px;
+  background: rgba(13, 17, 23, 0.95);
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 16px;
+  z-index: 10003;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  animation: slideInFromRight 0.3s ease;
+  display: none;
+}
+
+.ollama-progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.ollama-progress-title {
+  color: #58a6ff;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ollama-progress-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #30363d;
+  border-top: 2px solid #58a6ff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.ollama-progress-close {
+  color: #7d8590;
+  cursor: pointer;
+  font-size: 18px;
+  transition: color 0.2s ease;
+  background: none;
+  border: none;
+  padding: 0;
+  line-height: 1;
+}
+
+.ollama-progress-close:hover {
+  color: #e6edf3;
+}
+
+.ollama-progress-text {
+  color: #e6edf3;
+  font-size: 12px;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.ollama-progress-bar {
+  width: 100%;
+  height: 4px;
+  background: #21262d;
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.ollama-progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #58a6ff 0%, #1f6feb 100%);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+  width: 0%;
+}
+
+.ollama-progress-status {
+  color: #7d8590;
+  font-size: 11px;
+  text-align: center;
+}
+
+/* Streaming content styles */
+.ollama-stream-content {
+  margin-top: 12px;
+  padding: 8px;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  border-radius: 6px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.ollama-stream-text {
+  color: #e6edf3;
+  font-size: 11px;
+  font-family: 'SF Mono', Monaco, 'Inconsolata', 'Roboto Mono', Consolas, 'Courier New', monospace;
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Custom scrollbar for streaming content */
+.ollama-stream-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ollama-stream-content::-webkit-scrollbar-track {
+  background: #21262d;
+  border-radius: 3px;
+}
+
+.ollama-stream-content::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 3px;
+}
+
+.ollama-stream-content::-webkit-scrollbar-thumb:hover {
+  background: #484f58;
+}
+
+/* Animations */
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Success state */
+.ollama-progress-container.success .ollama-progress-bar-fill {
+  background: linear-gradient(90deg, #238636 0%, #2ea043 100%);
+}
+
+.ollama-progress-container.success .ollama-progress-spinner {
+  border-top-color: #238636;
+}
+
+.ollama-progress-container.success .ollama-progress-title {
+  color: #238636;
+}
+
+/* Error state */
+.ollama-progress-container.error .ollama-progress-bar-fill {
+  background: linear-gradient(90deg, #da3633 0%, #f85149 100%);
+}
+
+.ollama-progress-container.error .ollama-progress-spinner {
+  border-top-color: #da3633;
+  animation: none;
+}
+
+.ollama-progress-container.error .ollama-progress-title {
+  color: #da3633;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 480px) {
+  .ollama-progress-container {
+    width: calc(100vw - 40px);
+    right: 20px;
+    left: 20px;
+  }
+}
+
+/* Persistent Toast for Sending Status */
+.ollama-toast-sending {
+  position: fixed;
+  top: 70px;
+  right: 20px;
+  background: rgba(31, 111, 235, 0.95);
+  color: #e6edf3;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 10004;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+  border: 1px solid #58a6ff;
+  backdrop-filter: blur(8px);
+  animation: slideInFromRight 0.3s ease;
+  max-width: 350px;
+  word-wrap: break-word;
+  white-space: pre-line;
+  line-height: 1.4;
 } 
