@@ -8,6 +8,10 @@ const connectionDot = document.getElementById('connection-dot');
 const connectionText = document.getElementById('connection-text');
 const settingsToggle = document.getElementById('settings-toggle');
 const settingsPanel = document.getElementById('settings-panel');
+const historyToggle = document.getElementById('history-toggle');
+const historyPanel = document.getElementById('history-panel');
+const historyContent = document.getElementById('history-content');
+const clearHistoryBtn = document.getElementById('clear-history-btn');
 const modelManagementToggle = document.getElementById('model-management-toggle');
 const modelManagement = document.getElementById('model-management');
 const modelPullInput = document.getElementById('model-pull-input');
@@ -52,6 +56,37 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // Toggle settings panel
 settingsToggle.addEventListener('click', () => {
   settingsPanel.classList.toggle('show');
+  // Hide history panel when settings is opened
+  if (settingsPanel.classList.contains('show')) {
+    historyPanel.classList.remove('show');
+    historyToggle.classList.remove('active');
+  }
+});
+
+// Toggle history panel
+historyToggle.addEventListener('click', () => {
+  historyPanel.classList.toggle('show');
+  historyToggle.classList.toggle('active');
+  
+  // Hide settings panel when history is opened
+  if (historyPanel.classList.contains('show')) {
+    settingsPanel.classList.remove('show');
+    loadConversationHistory();
+  }
+});
+
+// Clear history button
+clearHistoryBtn.addEventListener('click', async () => {
+  if (confirm('Are you sure you want to clear all conversation history?')) {
+    try {
+      await chrome.storage.local.remove(['conversationHistory']);
+      showStatus('Conversation history cleared!', 'success');
+      loadConversationHistory(); // Refresh the history display
+    } catch (error) {
+      console.error('Error clearing history:', error);
+      showStatus('Error clearing history', 'error');
+    }
+  }
 });
 
 // Toggle model management panel
@@ -614,4 +649,111 @@ document.addEventListener('keydown', (e) => {
     e.preventDefault();
     testConnection(true);
   }
-}); 
+});
+
+// Function to load and display conversation history
+async function loadConversationHistory() {
+  try {
+    historyContent.innerHTML = '<div class="history-loading">Loading conversations...</div>';
+    
+    const result = await chrome.storage.local.get(['conversationHistory']);
+    const history = result.conversationHistory || [];
+    
+    if (history.length === 0) {
+      historyContent.innerHTML = '<div class="history-empty">No conversations yet. Start using the extension to see your history here!</div>';
+      return;
+    }
+    
+    // Sort by timestamp (newest first)
+    history.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    let historyHtml = '';
+    history.forEach((conversation, index) => {
+      const date = new Date(conversation.timestamp);
+      const timeStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      
+      // Truncate text for display
+      const originalText = conversation.originalText.length > 80 ? 
+        conversation.originalText.substring(0, 80) + '...' : conversation.originalText;
+      const response = conversation.response.length > 100 ? 
+        conversation.response.substring(0, 100) + '...' : conversation.response;
+      
+      historyHtml += `
+        <div class="history-item" data-index="${index}">
+          <div class="history-timestamp">${timeStr}</div>
+          ${conversation.customPrompt ? `<div class="history-prompt">${conversation.customPrompt}</div>` : ''}
+          <div class="history-text">${originalText}</div>
+          <div class="history-response">${response}</div>
+        </div>
+      `;
+    });
+    
+    historyContent.innerHTML = historyHtml;
+    
+    // Add click listeners to history items
+    document.querySelectorAll('.history-item').forEach(item => {
+      item.addEventListener('click', () => {
+        const index = parseInt(item.dataset.index);
+        showConversationDetails(history[index]);
+      });
+    });
+    
+  } catch (error) {
+    console.error('Error loading conversation history:', error);
+    historyContent.innerHTML = '<div class="history-empty">Error loading conversations.</div>';
+  }
+}
+
+// Function to show conversation details in a modal-like view
+function showConversationDetails(conversation) {
+  const date = new Date(conversation.timestamp);
+  const timeStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+  
+  const detailsHtml = `
+    <div style="padding: 15px; background: #0d1117; border-radius: 8px; margin: 10px 0; border: 1px solid #30363d;">
+      <div style="font-size: 11px; color: #7d8590; margin-bottom: 10px;">
+        📅 ${timeStr} | 🌐 ${conversation.title || 'Unknown page'}
+      </div>
+      ${conversation.customPrompt ? `
+        <div style="margin-bottom: 10px;">
+          <div style="font-size: 12px; color: #58a6ff; font-weight: 600; margin-bottom: 5px;">PROMPT:</div>
+          <div style="font-size: 11px; color: #e6edf3; line-height: 1.4;">${conversation.customPrompt}</div>
+        </div>
+      ` : ''}
+      <div style="margin-bottom: 10px;">
+        <div style="font-size: 12px; color: #58a6ff; font-weight: 600; margin-bottom: 5px;">ORIGINAL TEXT:</div>
+        <div style="font-size: 11px; color: #e6edf3; line-height: 1.4; max-height: 100px; overflow-y: auto;">${conversation.originalText}</div>
+      </div>
+      <div>
+        <div style="font-size: 12px; color: #238636; font-weight: 600; margin-bottom: 5px;">AI RESPONSE:</div>
+        <div style="font-size: 11px; color: #e6edf3; line-height: 1.4; max-height: 150px; overflow-y: auto; white-space: pre-wrap;">${conversation.response}</div>
+      </div>
+      <div style="margin-top: 10px; text-align: right;">
+        <button onclick="copyToClipboard('${conversation.response.replace(/'/g, "\\'")}'); this.textContent='Copied!'; setTimeout(() => this.textContent='Copy Response', 2000);" 
+                style="background: #238636; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 11px; cursor: pointer;">
+          Copy Response
+        </button>
+      </div>
+    </div>
+  `;
+  
+  // Replace current history content with details view
+  historyContent.innerHTML = `
+    <div style="padding: 10px;">
+      <button onclick="loadConversationHistory()" 
+              style="background: #21262d; color: #e6edf3; border: 1px solid #30363d; padding: 6px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; margin-bottom: 10px;">
+        ← Back to History
+      </button>
+      ${detailsHtml}
+    </div>
+  `;
+}
+
+// Helper function to copy text to clipboard
+function copyToClipboard(text) {
+  navigator.clipboard.writeText(text).then(() => {
+    console.log('Text copied to clipboard');
+  }).catch(err => {
+    console.error('Error copying text: ', err);
+  });
+}

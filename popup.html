@@ -28,7 +28,12 @@
       gap: 8px;
     }
     
-    .settings-icon {
+    .header-buttons {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .settings-icon, .history-icon {
       cursor: pointer;
       font-size: 20px;
       color: #7d8590;
@@ -39,9 +44,14 @@
       border: 1px solid #30363d;
     }
     
-    .settings-icon:hover {
+    .settings-icon:hover, .history-icon:hover {
       color: #58a6ff;
       background: #262c36;
+    }
+    
+    .history-icon.active {
+      color: #58a6ff;
+      background: #0c2d6b;
     }
     
     .form-group {
@@ -314,12 +324,129 @@
     .model-management-toggle:hover {
       color: #58a6ff;
     }
+
+    /* History Panel Styles */
+    .history-panel {
+      display: none;
+      margin-top: 20px;
+      background: #161b22;
+      border-radius: 8px;
+      border: 1px solid #30363d;
+      overflow: hidden;
+    }
+
+    .history-panel.show {
+      display: block;
+    }
+
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px;
+      background: #21262d;
+      border-bottom: 1px solid #30363d;
+    }
+
+    .history-header h3 {
+      margin: 0;
+      color: #58a6ff;
+      font-size: 14px;
+    }
+
+    .history-content {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .history-loading {
+      padding: 20px;
+      text-align: center;
+      color: #7d8590;
+      font-size: 12px;
+    }
+
+    .history-empty {
+      padding: 20px;
+      text-align: center;
+      color: #7d8590;
+      font-size: 12px;
+    }
+
+    .history-item {
+      padding: 12px 15px;
+      border-bottom: 1px solid #30363d;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .history-item:hover {
+      background: #21262d;
+    }
+
+    .history-item:last-child {
+      border-bottom: none;
+    }
+
+    .history-timestamp {
+      font-size: 10px;
+      color: #7d8590;
+      margin-bottom: 4px;
+    }
+
+    .history-prompt {
+      font-size: 11px;
+      color: #58a6ff;
+      margin-bottom: 2px;
+      font-weight: 500;
+    }
+
+    .history-text {
+      font-size: 11px;
+      color: #e6edf3;
+      margin-bottom: 4px;
+      line-height: 1.3;
+      max-height: 32px;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .history-response {
+      font-size: 11px;
+      color: #7d8590;
+      line-height: 1.3;
+      max-height: 32px;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+    }
+
+    .btn-danger {
+      background: #da3633;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-danger:hover {
+      background: #e5534b;
+    }
   </style>
 </head>
 <body>
   <div class="header">
     <h1>🤖 XandAI</h1>
-    <div class="settings-icon" id="settings-toggle" title="Settings">⚙️</div>
+    <div class="header-buttons">
+      <div class="history-icon" id="history-toggle" title="Conversation History">📜</div>
+      <div class="settings-icon" id="settings-toggle" title="Settings">⚙️</div>
+    </div>
   </div>
   
   <div class="settings-panel" id="settings-panel">
@@ -391,8 +518,19 @@
       4. Wait for your LLM response!
     </p>
     <span class="model-management-toggle" id="model-management-toggle">🔧 Manage Models</span>
+    </div>
+
+  <!-- History Panel -->
+  <div class="history-panel" id="history-panel">
+    <div class="history-header">
+      <h3>💬 Conversation History</h3>
+      <button class="btn-danger" id="clear-history-btn">Clear All</button>
+    </div>
+    <div class="history-content" id="history-content">
+      <div class="history-loading">Loading conversations...</div>
+    </div>
   </div>
-  
+
   <script src="popup.js"></script>
 </body>
 </html> 
