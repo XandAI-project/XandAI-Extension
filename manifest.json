@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "XandAI",
-  "version": "1.7",
+  "version": "1.10",
   "description": "Send selected text to your local Ollama LLM with custom prompts",
   "permissions": [
     "activeTab",

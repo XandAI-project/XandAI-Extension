@@ -1,4 +1,6 @@
-// DOM elements
+// DOM elements - with error checking
+console.log('🔍 Loading DOM elements...');
+
 const form = document.getElementById('settings-form');
 const urlInput = document.getElementById('ollama-url');
 const modelSelect = document.getElementById('ollama-model');
@@ -22,6 +24,8 @@ const pullProgressContainer = document.getElementById('pull-progress-container')
 const pullProgressFill = document.getElementById('pull-progress-fill');
 const pullProgressText = document.getElementById('pull-progress-text');
 
+
+
 // Load saved settings
 document.addEventListener('DOMContentLoaded', async () => {
   try {
@@ -40,11 +44,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Test connection automatically
     await testConnection(false);
+    
+
   } catch (error) {
     console.error('Error loading settings:', error);
     showStatus('Error loading settings', 'error');
   }
 });
+
+
+
+
 
 // Global message listener for progress updates
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -56,7 +66,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 // Toggle settings panel
 settingsToggle.addEventListener('click', () => {
   settingsPanel.classList.toggle('show');
-  // Hide history panel when settings is opened
+  // Hide other panels when settings is opened
   if (settingsPanel.classList.contains('show')) {
     historyPanel.classList.remove('show');
     historyToggle.classList.remove('active');
@@ -68,12 +78,14 @@ historyToggle.addEventListener('click', () => {
   historyPanel.classList.toggle('show');
   historyToggle.classList.toggle('active');
   
-  // Hide settings panel when history is opened
+  // Hide other panels when history is opened
   if (historyPanel.classList.contains('show')) {
     settingsPanel.classList.remove('show');
     loadConversationHistory();
   }
 });
+
+// HTML toggle event listener is now handled in setupHtmlInjectionEventListeners()
 
 // Clear history button
 clearHistoryBtn.addEventListener('click', async () => {
@@ -111,6 +123,8 @@ modelPullInput.addEventListener('keydown', (e) => {
   }
 });
 
+// HTML injection event listeners are now handled in setupHtmlInjectionEventListeners()
+
 
 
 // Save settings
@@ -129,14 +143,31 @@ form.addEventListener('submit', async (e) => {
   }
   
   try {
+    // Save to both sync and local storage for redundancy
     await chrome.storage.sync.set(settings);
+    
+    // Also save to local storage as backup
+    try {
+      await chrome.storage.local.set(settings);
+      console.log('Settings also saved to local storage as backup');
+    } catch (localError) {
+      console.warn('Could not save to local storage:', localError);
+    }
+    
     showStatus('Settings saved!', 'success');
     
     // Test connection after saving
     setTimeout(() => testConnection(false), 1000);
   } catch (error) {
     console.error('Error saving:', error);
-    showStatus('Error saving settings', 'error');
+    
+    // Try saving to local storage if sync fails
+    try {
+      await chrome.storage.local.set(settings);
+      showStatus('Settings saved to local storage (sync failed)', 'warning');
+    } catch (localError) {
+      showStatus('Error saving settings', 'error');
+    }
   }
 });
 
@@ -729,7 +760,8 @@ function showConversationDetails(conversation) {
         <div style="font-size: 11px; color: #e6edf3; line-height: 1.4; max-height: 150px; overflow-y: auto; white-space: pre-wrap;">${conversation.response}</div>
       </div>
       <div style="margin-top: 10px; text-align: right;">
-        <button onclick="copyToClipboard('${conversation.response.replace(/'/g, "\\'")}'); this.textContent='Copied!'; setTimeout(() => this.textContent='Copy Response', 2000);" 
+        <button class="copy-response-btn"
+                data-response="${conversation.response.replace(/"/g, '&quot;')}"
                 style="background: #238636; color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 11px; cursor: pointer;">
           Copy Response
         </button>
@@ -740,13 +772,31 @@ function showConversationDetails(conversation) {
   // Replace current history content with details view
   historyContent.innerHTML = `
     <div style="padding: 10px;">
-      <button onclick="loadConversationHistory()" 
+      <button class="back-to-history-btn"
               style="background: #21262d; color: #e6edf3; border: 1px solid #30363d; padding: 6px 12px; border-radius: 4px; font-size: 11px; cursor: pointer; margin-bottom: 10px;">
         ← Back to History
       </button>
       ${detailsHtml}
     </div>
   `;
+  
+  // Add event listeners to dynamically created buttons
+  const backBtn = historyContent.querySelector('.back-to-history-btn');
+  if (backBtn) {
+    backBtn.addEventListener('click', loadConversationHistory);
+  }
+  
+  const copyBtn = historyContent.querySelector('.copy-response-btn');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', function() {
+      const responseText = this.getAttribute('data-response').replace(/&quot;/g, '"');
+      copyToClipboard(responseText);
+      this.textContent = 'Copied!';
+      setTimeout(() => {
+        this.textContent = 'Copy Response';
+      }, 2000);
+    });
+  }
 }
 
 // Helper function to copy text to clipboard
@@ -757,3 +807,4 @@ function copyToClipboard(text) {
     console.error('Error copying text: ', err);
   });
 }
+

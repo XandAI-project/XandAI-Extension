@@ -1,6 +1,6 @@
 # 🤖 XandAI
 
-A powerful Chrome extension that allows you to send selected text directly to your local Ollama server with customizable prompts and advanced model management.
+A powerful Chrome extension that allows you to send selected text directly to your local Ollama server with customizable prompts, advanced model management, and conversation history tracking.
 
 ## ✨ Features
 
@@ -16,6 +16,8 @@ A powerful Chrome extension that allows you to send selected text directly to yo
 - 🌐 **Multi-Option Interface**: Text, HTML, and Page buttons appear when selecting text
 - 🔒 **Works on HTTPS**: Bypasses Mixed Content limitations using background scripts
 - 🗂️ **Context Menu**: Multiple sending options available through right-click context menu
+- 📜 **Conversation History**: Track and review all your previous AI interactions with timestamps
+- 🗗 **Dedicated Window Mode**: Open conversations in a separate window for better focus
 
 ## 📦 Installation
 
@@ -98,6 +100,13 @@ XandAI includes powerful model management features:
 2. Click **"🗗 Open in Window"** for a dedicated prompt window
 3. Useful for longer conversations or when you need more space
 
+#### Method 4: Conversation History
+1. Click the extension icon in the Chrome toolbar
+2. Click the **history (📜) icon** to view conversation history
+3. Browse through all your previous interactions with timestamps
+4. Review past prompts and responses for reference
+5. All conversations are automatically saved locally in your browser
+
 #### Content Types Explained
 - **Text**: Perfect for summarizing, translating, or analyzing written content
 - **HTML Element**: Ideal for code reviews, structure analysis, or debugging specific components
@@ -113,6 +122,8 @@ The extension provides comprehensive configuration options:
 - **Model Management**: Built-in tools to pull and delete models
 - **HuggingFace Integration**: Automatic detection and prefix handling
 - **Progress Tracking**: Visual feedback for model operations
+- **Conversation History**: Access to all your previous AI interactions with timestamps
+- **Window Mode**: Option to open conversations in a dedicated window
 
 **Common Ollama URLs:**
 ```
@@ -297,11 +308,12 @@ Before submitting a PR:
 
 ## 🔒 Privacy and Security
 
-- ✅ **Local Data**: All settings stay in your browser
+- ✅ **Local Data**: All settings and conversation history stay in your browser
 - ✅ **No Telemetry**: We don't collect usage data
 - ✅ **Open Source**: All code is auditable
 - ✅ **HTTPS Safe**: Works on HTTPS sites without compromising security
 - ✅ **Minimal Permissions**: Only requests necessary permissions
+- ✅ **Private Conversations**: All AI interactions are stored locally and never shared
 
 ## 📋 Roadmap
 
@@ -376,7 +388,16 @@ ollama list
 
 ## 📝 Changelog
 
-### v1.4.0 (Current)
+### v1.5.0 (Current)
+- **feat**: Added conversation history tracking with timestamps
+- **feat**: Implemented dedicated window mode for better focus
+- **feat**: Enhanced UI with history panel and navigation
+- **feat**: Local storage of all AI interactions for future reference
+- **refactor**: Removed HTML injection feature based on user feedback
+- **fix**: Improved stability and error handling
+- **docs**: Updated README with conversation history instructions
+
+### v1.4.0
 - **feat**: Complete rebranding to XandAI
 - **feat**: Integrated model management with pull and delete functionality
 - **feat**: HuggingFace model auto-detection with `hf.co/` prefix

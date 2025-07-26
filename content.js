@@ -4,6 +4,93 @@
 let selectionButton = null;
 let selectedText = '';
 
+// Helper function to load settings robustly with fallbacks
+async function loadSettingsRobustly(retries = 3) {
+  console.log('🔧 loadSettingsRobustly: Starting settings load...');
+  let retryCount = 0;
+  
+  while (retryCount < retries) {
+    try {
+      // Try sync storage first
+      const syncSettings = await new Promise((resolve, reject) => {
+        chrome.storage.sync.get(['ollamaUrl', 'ollamaModel'], (result) => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+            return;
+          }
+          resolve(result);
+        });
+      });
+      
+      console.log(`Settings loaded from sync storage (attempt ${retryCount + 1}):`, syncSettings);
+      
+      // If we have a valid model, return it
+      if (syncSettings.ollamaModel && syncSettings.ollamaModel.trim() !== '') {
+        const finalSettings = {
+          ollamaUrl: syncSettings.ollamaUrl || 'http://localhost:11434',
+          ollamaModel: syncSettings.ollamaModel
+        };
+        console.log('✅ loadSettingsRobustly: Found valid model in sync storage:', finalSettings);
+        return finalSettings;
+      }
+      
+      // Try local storage as fallback
+      console.log('Sync storage empty or no model, trying local storage...');
+      const localSettings = await new Promise((resolve, reject) => {
+        chrome.storage.local.get(['ollamaUrl', 'ollamaModel'], (result) => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+            return;
+          }
+          resolve(result);
+        });
+      });
+      
+      if (localSettings.ollamaModel && localSettings.ollamaModel.trim() !== '') {
+        console.log('Found valid model in local storage:', localSettings.ollamaModel);
+        return {
+          ollamaUrl: localSettings.ollamaUrl || syncSettings.ollamaUrl || 'http://localhost:11434',
+          ollamaModel: localSettings.ollamaModel
+        };
+      }
+      
+      // If no model found anywhere, increment retry
+      throw new Error('No model found in any storage');
+      
+    } catch (error) {
+      console.warn(`Error loading settings (attempt ${retryCount + 1}):`, error);
+      retryCount++;
+      
+      if (retryCount >= retries) {
+        // Try background script as final fallback
+        try {
+          console.log('Trying background script as final fallback...');
+          const response = await new Promise((resolve) => {
+            chrome.runtime.sendMessage({action: 'getSettings'}, resolve);
+          });
+          
+          if (response && response.success && response.settings && response.settings.ollamaModel) {
+            console.log('Got valid settings from background script:', response.settings);
+            return response.settings;
+          }
+        } catch (bgError) {
+          console.warn('Background script fallback failed:', bgError);
+        }
+        
+        // Last resort: return defaults (will trigger validation error)
+        console.warn('All fallbacks failed, returning defaults');
+        return {
+          ollamaUrl: 'http://localhost:11434',
+          ollamaModel: ''
+        };
+      } else {
+        // Wait before retry
+        await new Promise(resolve => setTimeout(resolve, 200 * retryCount));
+      }
+    }
+  }
+}
+
 // Function to create send button with options
 function createSendButton() {
   const container = document.createElement('div');
@@ -217,40 +304,28 @@ async function sendToOllama(text, customPrompt = '') {
    const { text, customPrompt } = request;
    
    try {
-     // Try to load saved settings from storage
-     let settings = {};
-     
-     try {
-       settings = await new Promise((resolve, reject) => {
-         chrome.storage.sync.get(['ollamaUrl', 'ollamaModel'], (result) => {
-           if (chrome.runtime.lastError) {
-             reject(new Error(chrome.runtime.lastError.message));
-             return;
-           }
-           
-           console.log('Content script loaded settings:', result); // Debug log
-           
-           resolve({
-             ollamaUrl: result.ollamaUrl || 'http://localhost:11434',
-             ollamaModel: result.ollamaModel || ''
-           });
-         });
-       });
-     } catch (error) {
-       console.warn('Error loading settings, using defaults:', error);
-       settings = {
-         ollamaUrl: 'http://localhost:11434',
-         ollamaModel: ''
-       };
-     }
+     // Load settings using the robust helper function
+     const settings = await loadSettingsRobustly();
 
      const url = settings.ollamaUrl;
      const model = settings.ollamaModel;
 
-     console.log('About to send with model:', model); // Debug log
+     console.log('About to send with URL:', url, 'and model:', model); // Enhanced debug log
+     console.log('Model type:', typeof model, 'Model length:', model ? model.length : 'null/undefined');
 
-     // Check if model is selected (trim to handle whitespace)
-     if (!model || model.trim() === '') {
+     // Enhanced model validation with better error reporting
+     if (!model) {
+       console.error('Model is null, undefined, or empty:', model);
+       throw new Error('No model selected. Please select a model in the extension settings.');
+     }
+     
+     if (typeof model !== 'string') {
+       console.error('Model is not a string:', typeof model, model);
+       throw new Error('Invalid model format. Please select a model in the extension settings.');
+     }
+     
+     if (model.trim() === '') {
+       console.error('Model is empty or only whitespace:', `"${model}"`);
        throw new Error('No model selected. Please select a model in the extension settings.');
      }
 
@@ -591,15 +666,12 @@ async function openInWindow(text, prompt = '') {
     let settings = {};
     
     try {
-      settings = await new Promise((resolve) => {
-        chrome.storage.sync.get(['ollamaUrl', 'ollamaModel'], (result) => {
-          resolve({
-            ollamaUrl: result.ollamaUrl || 'http://localhost:11434',
-            ollamaModel: result.ollamaModel || '',
-            promptTemplate: ''
-          });
-        });
-      });
+      // Use the robust settings loader
+      const loadedSettings = await loadSettingsRobustly();
+      settings = {
+        ...loadedSettings,
+        promptTemplate: ''
+      };
     } catch (error) {
       console.warn('Error loading settings in openInWindow:', error);
       settings = {
@@ -759,25 +831,27 @@ function getFullPageHtml() {
  }
 
  // Listener para mensagens do background (menu contextual)
- try {
-   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-     if (request.action === 'sendToOllama' && request.text) {
-       showPromptModalWithQueue(request.text, 'Selected Text');
-       sendResponse({ success: true });
-     } else if (request.action === 'sendHtmlToOllama' && request.text) {
-       const elementHtml = getSelectedElementHtml();
-       if (elementHtml) {
-         showPromptModalWithQueue(elementHtml, 'HTML Element');
-       } else {
-         showNotification('Could not capture HTML element', 'error');
-       }
-       sendResponse({ success: true });
-     } else if (request.action === 'sendPageToOllama') {
-       const pageHtml = getFullPageHtml();
-       showPromptModalWithQueue(pageHtml, 'Full Page HTML');
-       sendResponse({ success: true });
-     }
-   });
- } catch (error) {
-   console.warn('Error configuring message listener:', error);
- } 
+try {
+  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === 'sendToOllama' && request.text) {
+      showPromptModalWithQueue(request.text, 'Selected Text');
+      sendResponse({ success: true });
+    } else if (request.action === 'sendHtmlToOllama' && request.text) {
+      const elementHtml = getSelectedElementHtml();
+      if (elementHtml) {
+        showPromptModalWithQueue(elementHtml, 'HTML Element');
+      } else {
+        showNotification('Could not capture HTML element', 'error');
+      }
+      sendResponse({ success: true });
+    } else if (request.action === 'sendPageToOllama') {
+      const pageHtml = getFullPageHtml();
+      showPromptModalWithQueue(pageHtml, 'Full Page HTML');
+      sendResponse({ success: true });
+    }
+  });
+} catch (error) {
+  console.warn('Error configuring message listener:', error);
+}
+
+ 

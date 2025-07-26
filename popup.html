@@ -5,21 +5,20 @@
   <style>
     /* Base styles and CSS variables */
     :root {
-      --primary-bg: #0d1117;
-      --secondary-bg: #161b22;
-      --tertiary-bg: #21262d;
-      --hover-bg: #262c36;
-      --border-color: #30363d;
-      --primary-color: #58a6ff;
-      --text-primary: #e6edf3;
-      --text-secondary: #7d8590;
-      --success-color: #3fb950;
-      --error-color: #f85149;
-      --warning-color: #d29922;
-      --border-radius: 8px;
-      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      --shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-      --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.4);
+      --primary-bg: #1a1a1a;
+      --secondary-bg: #2d2d2d;
+      --tertiary-bg: #3d3d3d;
+      --hover-bg: #4a4a4a;
+      --border-color: #555;
+      --primary-color: #4a9eff;
+      --text-primary: #ffffff;
+      --text-secondary: #b3b3b3;
+      --success-color: #28a745;
+      --error-color: #dc3545;
+      --warning-color: #ffc107;
+      --border-radius: 6px;
+      --transition: all 0.2s ease;
+      --shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     }
 
     * {
@@ -27,97 +26,69 @@
     }
 
     body {
-      width: 420px;
-      max-width: 100vw;
+      width: 400px;
+      min-width: 400px;
+      max-width: 400px;
       min-height: 400px;
-      padding: 24px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Segoe UI Emoji', 'Segoe UI Symbol', Roboto, Helvetica, Arial, sans-serif;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       margin: 0;
       background: var(--primary-bg);
       color: var(--text-primary);
-      line-height: 1.5;
-      overflow-x: hidden;
+      line-height: 1.4;
+      font-size: 14px;
     }
     
     .header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 24px;
-      padding-bottom: 16px;
+      margin-bottom: 20px;
+      padding-bottom: 12px;
       border-bottom: 1px solid var(--border-color);
     }
     
     .header h1 {
       margin: 0;
       color: var(--primary-color);
-      font-size: 22px;
-      font-weight: 700;
+      font-size: 18px;
+      font-weight: 600;
       display: flex;
       align-items: center;
-      gap: 10px;
-      text-shadow: 0 2px 4px rgba(88, 166, 255, 0.3);
+      gap: 8px;
     }
     
     .header-buttons {
       display: flex;
-      gap: 12px;
+      gap: 8px;
     }
     
     .settings-icon, .history-icon {
       cursor: pointer;
-      font-size: 18px;
+      font-size: 16px;
       color: var(--text-secondary);
       transition: var(--transition);
-      padding: 12px;
+      padding: 8px;
       border-radius: var(--border-radius);
-      background: var(--tertiary-bg);
+      background: var(--secondary-bg);
       border: 1px solid var(--border-color);
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-      min-width: 44px;
-      min-height: 44px;
+      min-width: 32px;
+      min-height: 32px;
       display: flex;
       align-items: center;
       justify-content: center;
     }
-
-    .settings-icon::before,
-    .history-icon::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-      transition: var(--transition);
-    }
     
     .settings-icon:hover, .history-icon:hover {
       color: var(--primary-color);
-      background: var(--hover-bg);
+      background: var(--tertiary-bg);
       border-color: var(--primary-color);
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-hover);
-    }
-
-    .settings-icon:hover::before,
-    .history-icon:hover::before {
-      left: 100%;
-    }
-
-    .settings-icon:active, .history-icon:active {
-      transform: translateY(0);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     }
     
     .history-icon.active {
       color: var(--primary-color);
-      background: linear-gradient(135deg, #0c2d6b, #1a4b8c);
+      background: var(--tertiary-bg);
       border-color: var(--primary-color);
-      box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.3);
     }
     
     .form-group {
@@ -458,6 +429,8 @@
       animation: panelSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
     }
 
+
+
     @keyframes panelSlideIn {
       to {
         opacity: 1;
@@ -516,16 +489,17 @@
       margin-right: 10px;
     }
 
-    .model-delete-btn {
-      background: #da3633;
-      color: white;
-      border: none;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-size: 11px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
+         .model-delete-btn {
+       background: #da3633;
+       color: white;
+       border: none;
+       padding: 1px 4px;
+       border-radius: 2px;
+       font-size: 9px;
+       cursor: pointer;
+       transition: all 0.2s ease;
+       min-width: 35px;
+     }
 
     .model-delete-btn:hover {
       background: #e5534b;
@@ -741,29 +715,44 @@
     }
 
     /* Small button variant for history header */
-    .btn-danger.btn-small {
-      background: linear-gradient(135deg, var(--error-color), #ff6b6b);
+    .btn-danger.btn-small, .btn-secondary.btn-small {
       color: white;
       border: none;
-      padding: 8px 16px;
+      padding: 6px 12px;
       border-radius: calc(var(--border-radius) / 2);
       font-size: 11px;
-      font-weight: 600;
+      font-weight: 500;
       cursor: pointer;
       transition: var(--transition);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      box-shadow: 0 2px 8px rgba(248, 81, 73, 0.3);
+      text-transform: none;
+      letter-spacing: normal;
+      min-width: auto;
+      min-height: auto;
+      flex: none;
+    }
+
+    .btn-danger.btn-small {
+      background: var(--error-color);
+    }
+
+    .btn-secondary.btn-small {
+      background: var(--tertiary-bg);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
     }
 
     .btn-danger.btn-small:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(248, 81, 73, 0.4);
+      background: #e74c3c;
     }
 
-         .btn-danger.btn-small:active {
-       transform: translateY(0);
-     }
+    .btn-secondary.btn-small:hover {
+      background: var(--hover-bg);
+      border-color: var(--primary-color);
+    }
+
+    .btn-danger.btn-small:active, .btn-secondary.btn-small:active {
+      transform: none;
+    }
 
      /* Loading animations */
      .loading-spinner {
@@ -810,12 +799,12 @@
          gap: 8px;
        }
 
-       .settings-icon, .history-icon {
-         padding: 10px;
-         font-size: 16px;
-         min-width: 40px;
-         min-height: 40px;
-       }
+               .settings-icon, .history-icon {
+          padding: 10px;
+          font-size: 16px;
+          min-width: 40px;
+          min-height: 40px;
+        }
 
        .button-group {
          flex-direction: column;
@@ -912,6 +901,8 @@
     </form>
   </div>
 
+
+
   <div class="model-management" id="model-management" style="display: none;">
     <h3>Model Management</h3>
     
@@ -919,7 +910,7 @@
         <label for="model-pull-input">Pull New Model:</label>
         <div style="display: flex; gap: 10px;">
           <input type="text" id="model-pull-input" placeholder="e.g., llama2, mistral, theBloke/Llama-2-7B-Chat-GGUF">
-          <button type="button" id="pull-model-btn" class="btn-primary">Pull</button>
+          <button type="button" id="pull-model-btn" class="btn-primary" style="min-width: 150px; flex: none;">Pull</button>
         </div>
         <div style="font-size: 11px; color: #7d8590; margin-top: 5px;">
           💡 Tip: HuggingFace models (username/model) automatically get "hf.co/" prefix

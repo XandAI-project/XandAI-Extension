@@ -68,7 +68,30 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === 'getSettings') {
     chrome.storage.sync.get(['ollamaUrl', 'ollamaModel'], (result) => {
-      sendResponse(result);
+      if (chrome.runtime.lastError) {
+        // Try local storage as fallback
+        chrome.storage.local.get(['ollamaUrl', 'ollamaModel'], (localResult) => {
+          if (chrome.runtime.lastError) {
+            sendResponse({ success: false, error: chrome.runtime.lastError.message });
+          } else {
+            sendResponse({ 
+              success: true, 
+              settings: {
+                ollamaUrl: localResult.ollamaUrl || 'http://localhost:11434',
+                ollamaModel: localResult.ollamaModel || ''
+              }
+            });
+          }
+        });
+      } else {
+        sendResponse({ 
+          success: true, 
+          settings: {
+            ollamaUrl: result.ollamaUrl || 'http://localhost:11434',
+            ollamaModel: result.ollamaModel || ''
+          }
+        });
+      }
     });
     return true; // Indica resposta assíncrona
   }
