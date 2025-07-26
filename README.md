@@ -2,6 +2,29 @@
 
 A powerful Chrome extension that allows you to send selected text directly to your local Ollama server with customizable prompts, advanced model management, and conversation history tracking.
 
+<div align="center">
+
+![XandAI Logo](icons/icon128.png)
+
+### 🚀 Transform any web text into intelligent AI conversations
+
+</div>
+
+## 📸 Screenshots
+
+<div align="center">
+
+### Extension Popup & Settings
+![Extension Interface](prints/Captura%20de%20tela%202025-07-24%20005132.png)
+
+### Text Selection & AI Response
+![Text Selection](prints/Captura%20de%20tela%202025-07-24%20005258.png)
+
+### Model Management & Configuration
+![Model Management](prints/Captura%20de%20tela%202025-07-26%20165634.png)
+
+</div>
+
 ## ✨ Features
 
 - 🎯 **Text Selection**: Select any text on web pages and send to XandAI
