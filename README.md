@@ -1,16 +1,23 @@
-# 🤖 Ollama Text Sender
+# 🤖 XandAI
 
-A Chrome extension that allows you to send selected text directly to your local Ollama server with customizable prompts.
+A powerful Chrome extension that allows you to send selected text directly to your local Ollama server with customizable prompts, advanced model management, and conversation history tracking.
 
 ## ✨ Features
 
-- 🎯 **Text Selection**: Select any text on web pages and send to Ollama
+- 🎯 **Text Selection**: Select any text on web pages and send to XandAI
+- 📝 **HTML Element Capture**: Send HTML structure of selected elements for code analysis
+- 📄 **Full Page Analysis**: Send complete webpage HTML to analyze structure, SEO, or code quality
 - 🎨 **Customizable Prompts**: Configure prompt templates for different use cases  
 - 🔧 **Dynamic Configuration**: Configure Ollama URL and model through the user interface
 - 🤖 **Automatic Model Detection**: Automatically loads available models from your Ollama server
-- 🚀 **Intuitive Interface**: Floating button appears automatically when selecting text
+- 📦 **Model Management**: Pull and delete models directly from the extension
+- 🚀 **HuggingFace Auto-Detection**: Automatically adds `hf.co/` prefix to HuggingFace models
+- 📊 **Real-time Progress**: Visual progress bar for model downloading
+- 🌐 **Multi-Option Interface**: Text, HTML, and Page buttons appear when selecting text
 - 🔒 **Works on HTTPS**: Bypasses Mixed Content limitations using background scripts
-- 🌐 **Context Menu**: Also available through right-click context menu
+- 🗂️ **Context Menu**: Multiple sending options available through right-click context menu
+- 📜 **Conversation History**: Track and review all your previous AI interactions with timestamps
+- 🗗 **Dedicated Window Mode**: Open conversations in a separate window for better focus
 
 ## 📦 Installation
 
@@ -33,7 +40,7 @@ A Chrome extension that allows you to send selected text directly to your local 
 
 5. **Select the project folder**
 
-6. **The "Ollama Text Sender" extension will appear in the list**
+6. **The "XandAI" extension will appear in the list**
 
 ### Ollama Setup
 
@@ -53,37 +60,70 @@ The extension will automatically connect to `http://localhost:11434` by default.
 2. **Click the settings (⚙️) icon** to configure:
    - **Ollama URL**: Your server address (e.g., `http://localhost:11434`)
    - **Model**: Select from automatically loaded models
-   - **Prompt Template**: Default prompt applied to all texts (optional)
 3. **Click "Test"** to verify connection to your Ollama server
 4. **Click "Save"** to store your settings
 
+### Model Management
+
+XandAI includes powerful model management features:
+
+1. **Click "🔧 Manage Models"** in the extension popup
+2. **Pull new models**: 
+   - Enter model name (e.g., `llama2`, `mistral`, `theBloke/Llama-2-7B-Chat-GGUF`)
+   - HuggingFace models automatically get `hf.co/` prefix
+   - Watch real-time download progress
+3. **Delete models**: Click the delete button next to any installed model
+4. **Monitor progress**: Visual progress bar shows download status
+
 ### Using the Extension
 
-#### Method 1: Text Selection
+#### Method 1: Multi-Option Floating Buttons
 1. Select any text on a web page
-2. A **🤖 Send to Ollama** button will appear near the selection
-3. Click the button to open the custom prompt dialog
+2. **Three buttons will appear** near the selection:
+   - **🤖 Text**: Send selected text to XandAI
+   - **📝 HTML**: Send HTML element containing the selection for code analysis
+   - **📄 Page**: Send complete webpage HTML for structure/SEO analysis
+3. Click your preferred option to open the custom prompt dialog
 4. Type your prompt (optional) and click "Send"
 5. The response will appear in a modal window
 
 #### Method 2: Context Menu
-1. Select text on any page
-2. Right-click
-3. Choose **"Send to Ollama"** from the context menu
+1. Select text on any page or right-click anywhere
+2. Right-click to open context menu
+3. Choose from multiple options:
+   - **"Send Text to XandAI"**: Send selected text only
+   - **"Send HTML Element to XandAI"**: Send HTML structure of selected element
+   - **"Send Full Page to XandAI"**: Send complete webpage HTML
 
 #### Method 3: Separate Window
-1. Select text and click the Ollama button
+1. Select text and use any sending method
 2. Click **"🗗 Open in Window"** for a dedicated prompt window
 3. Useful for longer conversations or when you need more space
 
+#### Method 4: Conversation History
+1. Click the extension icon in the Chrome toolbar
+2. Click the **history (📜) icon** to view conversation history
+3. Browse through all your previous interactions with timestamps
+4. Review past prompts and responses for reference
+5. All conversations are automatically saved locally in your browser
+
+#### Content Types Explained
+- **Text**: Perfect for summarizing, translating, or analyzing written content
+- **HTML Element**: Ideal for code reviews, structure analysis, or debugging specific components
+- **Full Page**: Great for SEO audits, accessibility checks, or complete code reviews
+
 ### Settings
 
-The extension automatically loads available models from your Ollama server:
+The extension provides comprehensive configuration options:
 
-- **Connection Status**: Shows if your Ollama server is reachable
+- **Connection Status**: Real-time status showing if your Ollama server is reachable
 - **Model Selection**: Dropdown with all your installed models
 - **URL Configuration**: Support for local and remote Ollama servers
-- **Prompt Templates**: Pre-configure prompts for specific tasks
+- **Model Management**: Built-in tools to pull and delete models
+- **HuggingFace Integration**: Automatic detection and prefix handling
+- **Progress Tracking**: Visual feedback for model operations
+- **Conversation History**: Access to all your previous AI interactions with timestamps
+- **Window Mode**: Option to open conversations in a dedicated window
 
 **Common Ollama URLs:**
 ```
@@ -180,9 +220,11 @@ fix: resolve extension context invalidation error
 docs: add troubleshooting section to README
 style: fix ESLint warnings and format code
 refactor: extract common utilities to separate module
-test: add integration tests for Ollama communication
-chore: update manifest version to 1.3.0
+test: add integration tests for XandAI communication
+chore: update manifest version to 1.4.0
 perf: optimize text selection detection algorithm
+feat: add HuggingFace model auto-detection
+feat: implement model management with progress tracking
 ```
 
 #### 🧪 Development Guidelines
@@ -224,7 +266,7 @@ What actually happens
 
 ## Environment
 - Browser: Chrome 120.0.0.0
-- Extension Version: 1.3.0
+- Extension Version: 1.4.0
 - OS: Windows 11
 - Ollama Version: 0.1.17
 ```
@@ -257,17 +299,21 @@ Before submitting a PR:
 - [ ] Settings can be configured and saved
 - [ ] Model dropdown loads available models
 - [ ] Connection status updates correctly
+- [ ] Model management (pull/delete) works correctly
+- [ ] HuggingFace auto-detection adds `hf.co/` prefix
+- [ ] Progress bar displays during model downloads
 - [ ] No console errors or warnings
 - [ ] Works on both HTTP and HTTPS sites
 - [ ] Extension reloads properly after changes
 
 ## 🔒 Privacy and Security
 
-- ✅ **Local Data**: All settings stay in your browser
+- ✅ **Local Data**: All settings and conversation history stay in your browser
 - ✅ **No Telemetry**: We don't collect usage data
 - ✅ **Open Source**: All code is auditable
 - ✅ **HTTPS Safe**: Works on HTTPS sites without compromising security
 - ✅ **Minimal Permissions**: Only requests necessary permissions
+- ✅ **Private Conversations**: All AI interactions are stored locally and never shared
 
 ## 📋 Roadmap
 
@@ -315,8 +361,17 @@ Before submitting a PR:
 
 ### Installing Ollama Models
 
-If you don't have any models installed:
+You can install models in two ways:
 
+#### Option 1: Using XandAI (Recommended)
+1. Open the extension and click "🔧 Manage Models"
+2. Enter model name in the "Pull New Model" field:
+   - Standard models: `llama2`, `mistral`, `phi`
+   - HuggingFace models: `theBloke/Llama-2-7B-Chat-GGUF` (auto-adds `hf.co/` prefix)
+3. Click "Pull" and watch the real-time progress bar
+4. Model will appear in your installed models list
+
+#### Option 2: Using Command Line
 ```bash
 # Popular models to get started
 ollama pull llama2          # Good general purpose model
@@ -324,13 +379,35 @@ ollama pull codellama       # Great for code-related tasks
 ollama pull mistral         # Fast and efficient
 ollama pull phi             # Lightweight option
 
+# HuggingFace models (add hf.co/ prefix manually)
+ollama pull hf.co/theBloke/Llama-2-7B-Chat-GGUF
+
 # List installed models
 ollama list
 ```
 
 ## 📝 Changelog
 
-### v1.3.0 (Current)
+### v1.5.0 (Current)
+- **feat**: Added conversation history tracking with timestamps
+- **feat**: Implemented dedicated window mode for better focus
+- **feat**: Enhanced UI with history panel and navigation
+- **feat**: Local storage of all AI interactions for future reference
+- **refactor**: Removed HTML injection feature based on user feedback
+- **fix**: Improved stability and error handling
+- **docs**: Updated README with conversation history instructions
+
+### v1.4.0
+- **feat**: Complete rebranding to XandAI
+- **feat**: Integrated model management with pull and delete functionality
+- **feat**: HuggingFace model auto-detection with `hf.co/` prefix
+- **feat**: Real-time progress bar for model downloads
+- **feat**: Enhanced model management UI with status indicators
+- **feat**: Improved error handling and user feedback
+- **fix**: Removed prompt engineering box for cleaner interface
+- **docs**: Updated README with model management instructions
+
+### v1.3.0
 - **feat**: Dynamic model selection with automatic loading from Ollama API
 - **feat**: Real-time connection status and testing
 - **feat**: Improved settings interface with model dropdown
@@ -382,7 +459,7 @@ This project is licensed under the MIT License - see the [LICENSE](#mit-license)
 ```
 MIT License
 
-Copyright (c) 2024 Ollama Text Sender
+Copyright (c) 2024 XandAI
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -417,4 +494,4 @@ Thanks to everyone who contributes to this project!
 
 ---
 
-**Made with ❤️ for the Ollama community** 
+**Made with ❤️ for the XandAI community** 

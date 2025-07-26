@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Ollama Text Sender",
-  "version": "1.4",
+  "name": "XandAI",
+  "version": "1.10",
   "description": "Send selected text to your local Ollama LLM with custom prompts",
   "permissions": [
     "activeTab",
@@ -28,7 +28,7 @@
   ],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "Ollama Text Sender"
+    "default_title": "XandAI"
   },
   "icons": {
     "16": "icons/icon16.png",
