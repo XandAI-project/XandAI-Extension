@@ -63,7 +63,7 @@
       gap: 8px;
     }
     
-    .settings-icon, .history-icon {
+    .settings-icon, .history-icon, .chat-icon {
       cursor: pointer;
       font-size: 16px;
       color: var(--text-secondary);
@@ -79,13 +79,13 @@
       justify-content: center;
     }
     
-    .settings-icon:hover, .history-icon:hover {
+    .settings-icon:hover, .history-icon:hover, .chat-icon:hover {
       color: var(--primary-color);
       background: var(--tertiary-bg);
       border-color: var(--primary-color);
     }
     
-    .history-icon.active {
+    .history-icon.active, .chat-icon.active {
       color: var(--primary-color);
       background: var(--tertiary-bg);
       border-color: var(--primary-color);
@@ -870,6 +870,7 @@
   <div class="header">
     <h1>🤖 XandAI</h1>
     <div class="header-buttons">
+      <div class="chat-icon" id="chat-toggle" title="Side Chat">💬</div>
       <div class="history-icon" id="history-toggle" title="Conversation History">📜</div>
       <div class="settings-icon" id="settings-toggle" title="Settings">⚙️</div>
     </div>
@@ -915,6 +916,24 @@
         <div style="font-size: 11px; color: #7d8590; margin-top: 5px;">
           💡 Tip: HuggingFace models (username/model) automatically get "hf.co/" prefix
         </div>
+        <details style="margin-top: 10px;">
+          <summary style="cursor: pointer; font-size: 12px; color: #58a6ff;">📚 Popular GGUF Models</summary>
+          <div style="margin-top: 8px; font-size: 11px; color: #7d8590; line-height: 1.6;">
+            <strong>Small & Fast:</strong><br>
+            • <code>phi</code> - Microsoft Phi (2.7B)<br>
+            • <code>tinyllama</code> - Tiny Llama (1.1B)<br>
+            <strong>General Purpose:</strong><br>
+            • <code>llama2</code> - Meta Llama 2 (7B)<br>
+            • <code>mistral</code> - Mistral AI (7B)<br>
+            • <code>thebloke/Llama-2-7B-Chat-GGUF</code> - Llama 2 Chat<br>
+            <strong>Code & Technical:</strong><br>
+            • <code>codellama</code> - Code Llama (7B)<br>
+            • <code>deepseek-coder</code> - DeepSeek Coder<br>
+            <strong>Advanced:</strong><br>
+            • <code>thebloke/Mixtral-8x7B-Instruct-v0.1-GGUF</code> - Mixtral (large)<br>
+            • <code>thebloke/Yi-34B-Chat-GGUF</code> - Yi Chat (34B)<br>
+          </div>
+        </details>
         <div id="pull-progress-container" style="display: none; margin-top: 10px;">
           <div class="progress-bar">
             <div id="pull-progress-fill" class="progress-bar-fill"></div>

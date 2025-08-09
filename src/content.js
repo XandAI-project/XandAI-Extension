@@ -1,5 +1,4 @@
-// Initial Chrome context verification
-
+// XandAI Extension Content Script
 // Prevent duplicate content script execution
 if (typeof window.XandAIContentScriptLoaded === 'undefined') {
   window.XandAIContentScriptLoaded = true;
@@ -9,8 +8,8 @@ if (typeof window.XandAIContentScriptLoaded === 'undefined') {
 // Global variables
 let selectionButton = null;
 let selectedText = '';
-let sideChat = null;
-let sideChatLoaded = false;
+
+
 
 // Helper function to load settings robustly with fallbacks
 async function loadSettingsRobustly(retries = 3) {
@@ -183,14 +182,14 @@ function showButton(x, y) {
 
     document.body.appendChild(selectionButton);
 
-    // Auto-hide após 5 segundos
+    // Auto-hide after 5 seconds
     setTimeout(hideButton, 5000);
   } catch (error) {
-            console.error('Error showing button:', error);
+    console.error('Error showing button:', error);
   }
 }
 
-// Função para esconder o botão
+// Function to hide the button
 function hideButton() {
   if (selectionButton) {
     selectionButton.remove();
@@ -198,198 +197,198 @@ function hideButton() {
   }
 }
 
- // Global variables for request queue
- let requestQueue = [];
- let isProcessing = false;
- let currentToastId = null;
+// Global variables for request queue
+let requestQueue = [];
+let isProcessing = false;
+let currentToastId = null;
 
- // Function to process request queue
- async function processRequestQueue() {
-   if (isProcessing || requestQueue.length === 0) {
-     return;
-   }
-
-   isProcessing = true;
-   const request = requestQueue.shift();
-   
-   // Update toast with new queue count
-   updateToastQueue();
-
-   try {
-     await executeOllamaRequest(request);
-   } catch (error) {
-     console.error('Error processing request:', error);
-     showNotification('Error processing request: ' + error.message, 'error');
-   } finally {
-     isProcessing = false;
-     
-     // Process next request in queue
-     if (requestQueue.length > 0) {
-       setTimeout(processRequestQueue, 100);
-     }
-   }
- }
-
-   // Function to add request to queue
-  function addToQueue(text, customPrompt = '', contentType = 'text') {
-    const request = {
-      id: Date.now() + Math.random(),
-      text,
-      customPrompt,
-      contentType,
-      timestamp: Date.now()
-    };
-
-    requestQueue.push(request);
-    
-    // Update toast with new queue count
-    updateToastQueue();
-    
-        // Show queue status
-     if (requestQueue.length > 1) {
-       showNotification(`Request added to queue (${requestQueue.length} requests pending)`, 'info');
-     }
-
-    // Start processing
-    processRequestQueue();
+// Function to process request queue
+async function processRequestQueue() {
+  if (isProcessing || requestQueue.length === 0) {
+    return;
   }
 
-       // Function to show persistent toast notification
-   function showPersistentToast(message, promptPreview = '') {
-     // Remove existing toast
-     if (currentToastId) {
-       const existing = document.getElementById(currentToastId);
-       if (existing) existing.remove();
-     }
+  isProcessing = true;
+  const request = requestQueue.shift();
+  
+  // Update toast with new queue count
+  updateToastQueue();
 
-     currentToastId = 'ollama-toast-' + Date.now();
-     const toast = document.createElement('div');
-     toast.id = currentToastId;
-     toast.className = 'ollama-toast-sending';
-     
-     const displayText = promptPreview ? 
-       `Sending: "${promptPreview.substring(0, 50)}${promptPreview.length > 50 ? '...' : ''}"` : 
-       message;
-     
-     // Add queue information if there are items in queue
-     const queueText = requestQueue.length > 0 ? `\nQueued: ${requestQueue.length}` : '';
-     
-     toast.textContent = displayText + queueText;
-     document.body.appendChild(toast);
-     
-     return currentToastId;
-   }
+  try {
+    await executeOllamaRequest(request);
+  } catch (error) {
+    console.error('Error processing request:', error);
+    showNotification('Error processing request: ' + error.message, 'error');
+  } finally {
+    isProcessing = false;
+    
+    // Process next request in queue
+    if (requestQueue.length > 0) {
+      setTimeout(processRequestQueue, 100);
+    }
+  }
+}
 
-     // Function to hide persistent toast
-   function hidePersistentToast() {
-     if (currentToastId) {
-       const toast = document.getElementById(currentToastId);
-       if (toast) toast.remove();
-       currentToastId = null;
-     }
-   }
+// Function to add request to queue
+function addToQueue(text, customPrompt = '', contentType = 'text') {
+  const request = {
+    id: Date.now() + Math.random(),
+    text,
+    customPrompt,
+    contentType,
+    timestamp: Date.now()
+  };
 
-   // Function to update toast with current queue status
-   function updateToastQueue() {
-     if (currentToastId) {
-       const toast = document.getElementById(currentToastId);
-       if (toast) {
-         const currentText = toast.textContent;
-         const sendingPart = currentText.split('\n')[0]; // Get the "Sending:" part
-         const queueText = requestQueue.length > 0 ? `\nQueued: ${requestQueue.length}` : '';
-         toast.textContent = sendingPart + queueText;
-       }
-     }
-   }
+  requestQueue.push(request);
+  
+  // Update toast with new queue count
+  updateToastQueue();
+  
+  // Show queue status
+  if (requestQueue.length > 1) {
+    showNotification(`Request added to queue (${requestQueue.length} requests pending)`, 'info');
+  }
+
+  // Start processing
+  processRequestQueue();
+}
+
+// Function to show persistent toast notification
+function showPersistentToast(message, promptPreview = '') {
+  // Remove existing toast
+  if (currentToastId) {
+    const existing = document.getElementById(currentToastId);
+    if (existing) existing.remove();
+  }
+
+  currentToastId = 'ollama-toast-' + Date.now();
+  const toast = document.createElement('div');
+  toast.id = currentToastId;
+  toast.className = 'ollama-toast-sending';
+  
+  const displayText = promptPreview ? 
+    `Sending: "${promptPreview.substring(0, 50)}${promptPreview.length > 50 ? '...' : ''}"` : 
+    message;
+  
+  // Add queue information if there are items in queue
+  const queueText = requestQueue.length > 0 ? `\nQueued: ${requestQueue.length}` : '';
+  
+  toast.textContent = displayText + queueText;
+  document.body.appendChild(toast);
+  
+  return currentToastId;
+}
+
+// Function to hide persistent toast
+function hidePersistentToast() {
+  if (currentToastId) {
+    const toast = document.getElementById(currentToastId);
+    if (toast) toast.remove();
+    currentToastId = null;
+  }
+}
+
+// Function to update toast with current queue status
+function updateToastQueue() {
+  if (currentToastId) {
+    const toast = document.getElementById(currentToastId);
+    if (toast) {
+      const currentText = toast.textContent;
+      const sendingPart = currentText.split('\n')[0]; // Get the "Sending:" part
+      const queueText = requestQueue.length > 0 ? `\nQueued: ${requestQueue.length}` : '';
+      toast.textContent = sendingPart + queueText;
+    }
+  }
+}
 
 // Main function to send text to Ollama (now uses queue)
 async function sendToOllama(text, customPrompt = '') {
   addToQueue(text, customPrompt, 'text');
 }
 
- // Function to execute Ollama request
- async function executeOllamaRequest(request) {
-   const { text, customPrompt } = request;
-   
-   try {
-     // Load settings using the robust helper function
-     const settings = await loadSettingsRobustly();
+// Function to execute Ollama request
+async function executeOllamaRequest(request) {
+  const { text, customPrompt } = request;
+  
+  try {
+    // Load settings using the robust helper function
+    const settings = await loadSettingsRobustly();
 
-     const url = settings.ollamaUrl;
-     const model = settings.ollamaModel;
+    const url = settings.ollamaUrl;
+    const model = settings.ollamaModel;
 
-     console.log('About to send with URL:', url, 'and model:', model); // Enhanced debug log
-     console.log('Model type:', typeof model, 'Model length:', model ? model.length : 'null/undefined');
+    console.log('About to send with URL:', url, 'and model:', model);
+    console.log('Model type:', typeof model, 'Model length:', model ? model.length : 'null/undefined');
 
-     // Enhanced model validation with better error reporting
-     if (!model) {
-       console.error('Model is null, undefined, or empty:', model);
-       throw new Error('No model selected. Please select a model in the extension settings.');
-     }
-     
-     if (typeof model !== 'string') {
-       console.error('Model is not a string:', typeof model, model);
-       throw new Error('Invalid model format. Please select a model in the extension settings.');
-     }
-     
-     if (model.trim() === '') {
-       console.error('Model is empty or only whitespace:', `"${model}"`);
-       throw new Error('No model selected. Please select a model in the extension settings.');
-     }
+    // Enhanced model validation with better error reporting
+    if (!model) {
+      console.error('Model is null, undefined, or empty:', model);
+      throw new Error('No model selected. Please select a model in the extension settings.');
+    }
+    
+    if (typeof model !== 'string') {
+      console.error('Model is not a string:', typeof model, model);
+      throw new Error('Invalid model format. Please select a model in the extension settings.');
+    }
+    
+    if (model.trim() === '') {
+      console.error('Model is empty or only whitespace:', `"${model}"`);
+      throw new Error('No model selected. Please select a model in the extension settings.');
+    }
 
-     // Build final prompt
-     let finalPrompt = text;
+    // Build final prompt
+    let finalPrompt = text;
 
-     // Priority: customPrompt > text only
-     if (customPrompt.trim()) {
-       finalPrompt = `${customPrompt}\n\nText:\n${text}`;
-     }
+    // Priority: customPrompt > text only
+    if (customPrompt.trim()) {
+      finalPrompt = `${customPrompt}\n\nText:\n${text}`;
+    }
 
-     // Show persistent toast with prompt preview
-     const promptPreview = customPrompt.trim() || 'Processing content';
-     showPersistentToast('Sending to XandAI...', promptPreview);
+    // Show persistent toast with prompt preview
+    const promptPreview = customPrompt.trim() || 'Processing content';
+    showPersistentToast('Sending to XandAI...', promptPreview);
 
-           // Send request through background script (normal mode)
-      const response = await new Promise((resolve, reject) => {
-        try {
-          chrome.runtime.sendMessage({
-            action: 'sendToOllama',
-            data: {
-              url: url,
-              model: model,
-              prompt: finalPrompt
-            }
-          }, (response) => {
-            if (chrome.runtime.lastError) {
-              reject(new Error(chrome.runtime.lastError.message));
-            } else if (response?.success) {
-              resolve(response.data);
-            } else {
-              reject(new Error(response?.error || 'Invalid response from background script'));
-            }
-          });
-        } catch (error) {
-          reject(new Error('Error sending message to background: ' + error.message));
-        }
-      });
+    // Send request through background script (normal mode)
+    const response = await new Promise((resolve, reject) => {
+      try {
+        chrome.runtime.sendMessage({
+          action: 'sendToOllama',
+          data: {
+            url: url,
+            model: model,
+            prompt: finalPrompt
+          }
+        }, (response) => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+          } else if (response?.success) {
+            resolve(response.data);
+          } else {
+            reject(new Error(response?.error || 'Invalid response from background script'));
+          }
+        });
+      } catch (error) {
+        reject(new Error('Error sending message to background: ' + error.message));
+      }
+    });
 
-           // Hide persistent toast
-      hidePersistentToast();
+    // Hide persistent toast
+    hidePersistentToast();
 
-      showNotification('Response received from XandAI!', 'success');
+    showNotification('Response received from XandAI!', 'success');
 
-      // Save to history with the complete response
-      await saveToHistory(text, customPrompt, response.response, request.contentType || 'text');
+    // Save to history with the complete response
+    await saveToHistory(text, customPrompt, response.response, request.contentType || 'text');
 
-      // Show response in modal
-      showResponseModal(text, response.response, customPrompt);
+    // Show response in modal
+    showResponseModal(text, response.response, customPrompt);
 
-   } catch (error) {
-     console.error('Error sending to Ollama:', error);
-     hidePersistentToast();
-     showNotification('Error connecting to Ollama: ' + error.message, 'error');
-   }
- }
+  } catch (error) {
+    console.error('Error sending to Ollama:', error);
+    hidePersistentToast();
+    showNotification('Error connecting to Ollama: ' + error.message, 'error');
+  }
+}
 
 // Function to save conversation to history
 async function saveToHistory(originalText, customPrompt, response, contentType) {
@@ -447,7 +446,7 @@ async function saveToHistory(originalText, customPrompt, response, contentType) 
   }
 }
 
-    // Function to show notifications
+// Function to show notifications
 function showNotification(message, type = 'info') {
   const notification = document.createElement('div');
   notification.className = `ollama-notification ollama-${type}`;
@@ -460,10 +459,11 @@ function showNotification(message, type = 'info') {
   }, 3000);
 }
 
+// ... (keeping existing modal functions for now)
+// TODO: Move these to separate UI modules
+
 // Function to show custom prompt modal
 function showPromptModal(text, contentType = 'Selected Text') {
-      // Modal creation for text prompt
-
   try {
     const modal = document.createElement('div');
     modal.className = 'ollama-modal';
@@ -473,19 +473,16 @@ function showPromptModal(text, contentType = 'Selected Text') {
     let placeholderText = '';
     
     if (contentType === 'HTML Element') {
-      // For HTML content, show in a code block with syntax highlighting
       const escapedHtml = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
       displayContent = `<pre class="ollama-html-content"><code>${escapedHtml}</code></pre>`;
       placeholderText = 'e.g.: Analyze this HTML structure and suggest improvements...';
     } else if (contentType === 'Full Page HTML') {
-      // For full page, show truncated version
       const truncatedHtml = text.length > 2000 ? 
         text.substring(0, 2000) + '...\n\n[Content truncated - full HTML will be sent to AI]' : text;
       const escapedHtml = truncatedHtml.replace(/</g, '&lt;').replace(/>/g, '&gt;');
       displayContent = `<pre class="ollama-html-content"><code>${escapedHtml}</code></pre>`;
       placeholderText = 'e.g.: Review this webpage structure, identify SEO issues, or analyze the code quality...';
     } else {
-      // Regular text content
       const escapedText = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
       displayContent = `<div class="ollama-selected-text">${escapedText}</div>`;
       placeholderText = 'e.g.: Summarize this text in 3 main points...';
@@ -498,25 +495,24 @@ function showPromptModal(text, contentType = 'Selected Text') {
           <span class="ollama-close">&times;</span>
         </div>
         <div class="ollama-modal-body">
-                     <div class="ollama-prompt-section">
-             <h4>Prompt (optional):</h4>
-             <textarea class="ollama-prompt-input" placeholder="${placeholderText}"></textarea>
-           </div>
-           <div class="ollama-text-section">
-             <h4>${contentType}:</h4>
+          <div class="ollama-prompt-section">
+            <h4>Prompt (optional):</h4>
+            <textarea class="ollama-prompt-input" placeholder="${placeholderText}"></textarea>
+          </div>
+          <div class="ollama-text-section">
+            <h4>${contentType}:</h4>
             ${displayContent}
           </div>
         </div>
-                 <div class="ollama-modal-footer">
-           <button class="ollama-send-final-btn">🚀 Send</button>
-           <button class="ollama-window-btn">🗗 Open in Window</button>
-           <button class="ollama-cancel-btn">Cancel</button>
+        <div class="ollama-modal-footer">
+          <button class="ollama-send-final-btn">🚀 Send</button>
+          <button class="ollama-window-btn">🗗 Open in Window</button>
+          <button class="ollama-cancel-btn">Cancel</button>
         </div>
       </div>
     `;
 
     document.body.appendChild(modal);
-    // Modal added to DOM
 
     // Focus on prompt textarea
     const promptInput = modal.querySelector('.ollama-prompt-input');
@@ -529,21 +525,20 @@ function showPromptModal(text, contentType = 'Selected Text') {
       if (e.target === modal) modal.remove();
     });
 
-         // Send custom prompt
-     modal.querySelector('.ollama-send-final-btn').addEventListener('click', async () => {
-       const customPrompt = promptInput.value.trim();
-       // Sending with custom prompt
-       modal.remove();
-       
-       // Route to appropriate function based on content type
-       if (contentType === 'HTML Element') {
-         sendHtmlToOllama(text, customPrompt);
-       } else if (contentType === 'Full Page HTML') {
-         sendPageToOllama(text, customPrompt);
-       } else {
-         sendToOllama(text, customPrompt);
-       }
-     });
+    // Send custom prompt
+    modal.querySelector('.ollama-send-final-btn').addEventListener('click', async () => {
+      const customPrompt = promptInput.value.trim();
+      modal.remove();
+      
+      // Route to appropriate function based on content type
+      if (contentType === 'HTML Element') {
+        sendHtmlToOllama(text, customPrompt);
+      } else if (contentType === 'Full Page HTML') {
+        sendPageToOllama(text, customPrompt);
+      } else {
+        sendToOllama(text, customPrompt);
+      }
+    });
 
     // Open in separate window
     modal.querySelector('.ollama-window-btn').addEventListener('click', async () => {
@@ -557,8 +552,6 @@ function showPromptModal(text, contentType = 'Selected Text') {
         showNotification('Error opening window: ' + error.message, 'error');
       }
     });
-
-
 
     // Enter to send (Ctrl+Enter for line break)
     promptInput.addEventListener('keydown', (e) => {
@@ -582,8 +575,8 @@ function showResponseModal(originalText, response, customPrompt = '') {
   let promptSection = '';
   if (customPrompt) {
     promptSection = `
-             <div class="ollama-custom-prompt">
-         <h4>Prompt Used:</h4>
+      <div class="ollama-custom-prompt">
+        <h4>Prompt Used:</h4>
         <p>${customPrompt}</p>
       </div>
     `;
@@ -591,26 +584,26 @@ function showResponseModal(originalText, response, customPrompt = '') {
 
   modal.innerHTML = `
     <div class="ollama-modal-content">
-             <div class="ollama-modal-header">
-         <h3>XandAI Response</h3>
+      <div class="ollama-modal-header">
+        <h3>XandAI Response</h3>
         <span class="ollama-close">&times;</span>
       </div>
       <div class="ollama-modal-body">
         ${promptSection}
-                 <div class="ollama-original-text">
-           <h4>Original Text:</h4>
+        <div class="ollama-original-text">
+          <h4>Original Text:</h4>
           <p>${originalText}</p>
         </div>
-                 <div class="ollama-response">
-           <h4>Response:</h4>
+        <div class="ollama-response">
+          <h4>Response:</h4>
           <p>${response}</p>
         </div>
       </div>
       <div class="ollama-modal-footer">
-                 <button class="ollama-copy-btn" onclick="navigator.clipboard.writeText('${response.replace(/'/g, "\\'")}')">
-           Copy Response
-         </button>
-         <button class="ollama-close-btn">Close</button>
+        <button class="ollama-copy-btn" onclick="navigator.clipboard.writeText('${response.replace(/'/g, "\\'")}')">
+          Copy Response
+        </button>
+        <button class="ollama-close-btn">Close</button>
       </div>
     </div>
   `;
@@ -631,8 +624,6 @@ document.addEventListener('mouseup', (e) => {
     const selection = window.getSelection();
     const text = selection.toString().trim();
 
-    // Text selection detection
-
     if (text.length > 0) {
       selectedText = text;
       const range = selection.getRangeAt(0);
@@ -642,10 +633,8 @@ document.addEventListener('mouseup', (e) => {
       const x = rect.left + (rect.width / 2) - 75; // Center button
       const y = rect.top + window.scrollY;
 
-      // Showing button at position
       showButton(x, y);
     } else {
-      // No text selected, hiding button
       hideButton();
     }
   }, 100);
@@ -668,13 +657,10 @@ document.addEventListener('keydown', (e) => {
 // Function to open in separate window
 async function openInWindow(text, prompt = '') {
   try {
-    // Opening window with text
-
     // Load settings from storage
     let settings = {};
     
     try {
-      // Use the robust settings loader
       const loadedSettings = await loadSettingsRobustly();
       settings = {
         ...loadedSettings,
@@ -694,7 +680,7 @@ async function openInWindow(text, prompt = '') {
       text: text,
       prompt: prompt,
       timestamp: Date.now(),
-      settings: settings // Include settings
+      settings: settings
     };
 
     sessionStorage.setItem('ollamaWindowData', JSON.stringify(windowData));
@@ -710,7 +696,7 @@ async function openInWindow(text, prompt = '') {
     try {
       extensionUrl = chrome.runtime.getURL('window.html');
     } catch (error) {
-             throw new Error('chrome.runtime.getURL is not available: ' + error.message);
+      throw new Error('chrome.runtime.getURL is not available: ' + error.message);
     }
 
     // Open new window
@@ -732,61 +718,17 @@ async function openInWindow(text, prompt = '') {
     if (newWindow) {
       newWindow.focus();
     } else {
-             throw new Error('Popup blocked or error opening window');
+      throw new Error('Popup blocked or error opening window');
     }
 
   } catch (error) {
     console.error('Error opening window:', error);
     showNotification('Error opening window: ' + error.message, 'error');
-
-    // Fallback: use normal modal
     showPromptModal(text);
   }
 }
 
-
-
-// Function to get conversation history
-async function getConversationHistory() {
-  try {
-    const result = await new Promise((resolve, reject) => {
-      chrome.storage.local.get(['conversationHistory'], (data) => {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
-        } else {
-          resolve(data);
-        }
-      });
-    });
-
-    return result.conversationHistory || [];
-  } catch (error) {
-    console.error('Error getting conversation history:', error);
-    return [];
-  }
-}
-
-// Function to clear conversation history
-async function clearConversationHistory() {
-  try {
-    await new Promise((resolve, reject) => {
-      chrome.storage.local.remove(['conversationHistory'], () => {
-        if (chrome.runtime.lastError) {
-          reject(new Error(chrome.runtime.lastError.message));
-        } else {
-          resolve();
-        }
-      });
-    });
-    
-    showNotification('Histórico de conversas limpo!', 'success');
-  } catch (error) {
-    console.error('Error clearing conversation history:', error);
-    showNotification('Erro ao limpar histórico', 'error');
-  }
-}
-
-// Function to get HTML element containing the selection
+// Helper functions
 function getSelectedElementHtml() {
   try {
     const selection = window.getSelection();
@@ -794,13 +736,11 @@ function getSelectedElementHtml() {
       const range = selection.getRangeAt(0);
       const commonAncestor = range.commonAncestorContainer;
       
-      // Find the closest element node
       let element = commonAncestor;
       if (element.nodeType === Node.TEXT_NODE) {
         element = element.parentElement;
       }
       
-      // Get the outerHTML of the containing element
       return element.outerHTML;
     }
     return null;
@@ -810,10 +750,8 @@ function getSelectedElementHtml() {
   }
 }
 
-// Function to get full page HTML
 function getFullPageHtml() {
   try {
-    // Get the complete HTML including DOCTYPE
     const doctype = document.doctype ? 
       '<!DOCTYPE ' + document.doctype.name + '>' : '';
     return doctype + document.documentElement.outerHTML;
@@ -823,143 +761,26 @@ function getFullPageHtml() {
   }
 }
 
- // Update modal to support queue system
- function showPromptModalWithQueue(text, contentType = 'Selected Text') {
-   showPromptModal(text, contentType);
- }
+function sendHtmlToOllama(text, customPrompt = '') {
+  addToQueue(text, customPrompt, 'html');
+}
 
- // Update sendToOllama function for HTML content
- function sendHtmlToOllama(text, customPrompt = '') {
-   addToQueue(text, customPrompt, 'html');
- }
-
- // Update sendToOllama function for page content
- function sendPageToOllama(text, customPrompt = '') {
-   addToQueue(text, customPrompt, 'page');
- }
-
- // Side Chat functionality
-function loadSideChat() {
-  // Always check if already exists first
-  if (window.XandAISideChat) {
-    console.log('✅ Side chat already exists globally');
-    sideChat = window.XandAISideChat;
-    sideChatLoaded = true;
-    return;
-  }
-  
-  if (sideChatLoaded) {
-    console.log('🔄 Side chat marked as loaded, but checking availability...');
-    sideChat = window.XandAISideChat;
-    if (sideChat) {
-      return;
-    } else {
-      console.log('⚠️ Side chat marked as loaded but not available, reloading...');
-      sideChatLoaded = false; // Reset flag
-    }
-  }
-  
-  try {
-    console.log('🚀 Loading side chat...');
-    
-    // Check if CSS is already injected
-    if (!document.querySelector('link[href*="sidechat.css"]')) {
-      const cssLink = document.createElement('link');
-      cssLink.rel = 'stylesheet';
-      cssLink.href = chrome.runtime.getURL('sidechat.css');
-      document.head.appendChild(cssLink);
-      console.log('✅ Side chat CSS injected');
-    } else {
-      console.log('📝 Side chat CSS already exists');
-    }
-    
-    // Create communication bridge for the side chat (only if not exists)
-    if (!window.chromeExtensionBridge) {
-      window.chromeExtensionBridge = {
-        sendMessage: (message) => {
-          return new Promise((resolve, reject) => {
-            try {
-              chrome.runtime.sendMessage(message, (response) => {
-                if (chrome.runtime.lastError) {
-                  reject(new Error(chrome.runtime.lastError.message));
-                } else {
-                  resolve(response);
-                }
-              });
-            } catch (error) {
-              reject(error);
-            }
-          });
-        },
-        
-        getSettings: async () => {
-          try {
-            const settings = await loadSettingsRobustly();
-            return { success: true, settings };
-          } catch (error) {
-            return { success: false, error: error.message };
-          }
-        }
-      };
-      console.log('✅ Chrome extension bridge created');
-    } else {
-      console.log('🔧 Bridge already exists');
-    }
-    
-    // Check if script is already injected
-    if (!document.querySelector('script[src*="sidechat.js"]')) {
-      const script = document.createElement('script');
-      script.src = chrome.runtime.getURL('sidechat.js');
-      script.onload = () => {
-        sideChatLoaded = true;
-        console.log('📦 Side chat script loaded');
-        
-        // Wait for initialization
-        setTimeout(() => {
-          sideChat = window.XandAISideChat;
-          if (sideChat) {
-            console.log('✅ Side chat JS loaded and ready');
-          } else {
-            console.error('❌ Side chat object not found after loading');
-          }
-        }, 500);
-      };
-      script.onerror = (error) => {
-        console.error('❌ Error loading side chat JS:', error);
-      };
-      document.head.appendChild(script);
-    } else {
-      console.log('📦 Side chat script already injected');
-      sideChatLoaded = true;
-      
-      // Check if it's available
-      setTimeout(() => {
-        sideChat = window.XandAISideChat;
-        if (sideChat) {
-          console.log('✅ Side chat already available');
-        }
-      }, 100);
-    }
-  } catch (error) {
-    console.error('❌ Error loading side chat:', error);
-  }
+function sendPageToOllama(text, customPrompt = '') {
+  addToQueue(text, customPrompt, 'page');
 }
 
 // Function to get page content for context
 function getPageContentForChat() {
   try {
-    // Get main content areas
     const mainContent = document.querySelector('main, article, [role="main"], .content, #content');
     let content = '';
     
     if (mainContent) {
       content = mainContent.innerText.trim();
     } else {
-      // Fallback to body content, but limit it
       content = document.body.innerText.trim();
     }
     
-    // Limit content length to avoid overwhelming the model
     const maxLength = 3000;
     if (content.length > maxLength) {
       content = content.substring(0, maxLength) + '...';
@@ -979,66 +800,33 @@ try {
     
     // Original context menu actions
     if (request.action === 'sendToOllama' && request.text) {
-      showPromptModalWithQueue(request.text, 'Selected Text');
+      showPromptModal(request.text, 'Selected Text');
       sendResponse({ success: true });
     } else if (request.action === 'sendHtmlToOllama' && request.text) {
       const elementHtml = getSelectedElementHtml();
       if (elementHtml) {
-        showPromptModalWithQueue(elementHtml, 'HTML Element');
+        showPromptModal(elementHtml, 'HTML Element');
       } else {
         showNotification('Could not capture HTML element', 'error');
       }
       sendResponse({ success: true });
     } else if (request.action === 'sendPageToOllama') {
       const pageHtml = getFullPageHtml();
-      showPromptModalWithQueue(pageHtml, 'Full Page HTML');
+      showPromptModal(pageHtml, 'Full Page HTML');
       sendResponse({ success: true });
     }
     // Side chat actions
     else if (request.action === 'toggleSideChat') {
-      console.log('🔄 Toggling side chat...');
+      console.log('🔄 Opening standalone chat window...');
       
-      (async () => {
-        try {
-          if (!sideChatLoaded) {
-            console.log('📦 Side chat not loaded, loading now...');
-            loadSideChat();
-            
-            // Wait for side chat to be available
-            let attempts = 0;
-            const maxAttempts = 50; // 5 seconds max wait
-            
-            while (!sideChat && attempts < maxAttempts) {
-              await new Promise(resolve => setTimeout(resolve, 100));
-              attempts++;
-              
-              // Check if sideChat is available
-              sideChat = window.XandAISideChat;
-            }
-            
-            if (!sideChat) {
-              console.error('❌ Side chat not available after loading');
-              sendResponse({ success: false, error: 'Side chat failed to load' });
-              return;
-            }
-          }
-          
-          if (sideChat) {
-            console.log('🔄 Side chat available, toggling...');
-            await sideChat.toggle();
-            console.log('✅ Side chat toggled successfully');
-            sendResponse({ success: true });
-          } else {
-            console.error('❌ Side chat not available');
-            sendResponse({ success: false, error: 'Side chat not available' });
-          }
-        } catch (error) {
-          console.error('❌ Error toggling side chat:', error);
-          sendResponse({ success: false, error: error.message });
-        }
-      })();
-      
-      return true; // Keep the message channel open for async response
+      try {
+        // Open standalone chat window
+        openInWindow('', '');
+        sendResponse({ success: true });
+      } catch (error) {
+        console.error('❌ Error opening standalone chat:', error);
+        sendResponse({ success: false, error: error.message });
+      }
     } else if (request.action === 'getPageContent') {
       const content = getPageContentForChat();
       sendResponse({ content: content });
@@ -1053,5 +841,3 @@ try {
 } else {
   console.log('♻️ XandAI Content Script already loaded, skipping initialization');
 }
-
- 
