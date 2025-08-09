@@ -8,30 +8,8 @@ if (typeof window.XandAIContentScriptLoaded === 'undefined') {
 // Global variables
 let selectionButton = null;
 let selectedText = '';
-let chatManager = null;
 
-// Initialize chat manager
-async function initializeChatManager() {
-  if (!chatManager) {
-    // Load ChatManager if not already loaded
-    if (!window.ChatManager) {
-      const script = document.createElement('script');
-      script.src = chrome.runtime.getURL('src/core/ChatManager.js');
-      script.onload = () => {
-        chatManager = new window.ChatManager();
-        console.log('✅ ChatManager initialized');
-      };
-      script.onerror = (error) => {
-        console.error('❌ Failed to load ChatManager:', error);
-      };
-      document.head.appendChild(script);
-    } else {
-      chatManager = new window.ChatManager();
-      console.log('✅ ChatManager initialized');
-    }
-  }
-  return chatManager;
-}
+
 
 // Helper function to load settings robustly with fallbacks
 async function loadSettingsRobustly(retries = 3) {
@@ -839,37 +817,16 @@ try {
     }
     // Side chat actions
     else if (request.action === 'toggleSideChat') {
-      console.log('🔄 Toggling side chat...');
+      console.log('🔄 Opening standalone chat window...');
       
-      (async () => {
-        try {
-          // Initialize chat manager if needed
-          if (!chatManager) {
-            await initializeChatManager();
-          }
-          
-          // Wait for ChatManager to be available
-          let attempts = 0;
-          while (!chatManager && attempts < 50) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-            attempts++;
-          }
-          
-          if (!chatManager) {
-            throw new Error('ChatManager not available');
-          }
-          
-          // Use ChatManager to toggle chat
-          const result = await chatManager.toggle();
-          sendResponse(result);
-          
-        } catch (error) {
-          console.error('❌ Error toggling side chat:', error);
-          sendResponse({ success: false, error: error.message });
-        }
-      })();
-      
-      return true; // Keep the message channel open for async response
+      try {
+        // Open standalone chat window
+        openInWindow('', '');
+        sendResponse({ success: true });
+      } catch (error) {
+        console.error('❌ Error opening standalone chat:', error);
+        sendResponse({ success: false, error: error.message });
+      }
     } else if (request.action === 'getPageContent') {
       const content = getPageContentForChat();
       sendResponse({ content: content });
