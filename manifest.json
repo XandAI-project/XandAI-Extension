@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "XandAI",
-  "version": "1.21",
+  "version": "1.21.5",
   "description": "Send selected text to your local Ollama LLM with custom prompts",
   "permissions": [
     "activeTab",
@@ -9,7 +9,8 @@
     "storage",
     "scripting",
     "windows",
-    "system.display"
+    "system.display",
+    "tabs"
   ],
   "host_permissions": [
     "http://localhost:*/*",
@@ -43,10 +44,7 @@
       "resources": [
         "window.html", 
         "window.js", 
-        "src/ui/SideChat.js", 
-        "src/ui/sidechat.css", 
         "src/ui/standalone-chat.js",
-        "src/core/ChatManager.js",
         "chat-window.html"
       ],
       "matches": ["<all_urls>"]

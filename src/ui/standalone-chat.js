@@ -9,7 +9,7 @@ class StandaloneSideChat {
     this.isOpen = false;
     this.messages = [];
     this.isStreaming = false;
-    this.includePageContext = false; // Disabled in standalone mode
+    this.includePageContext = false; // Can be enabled in standalone mode
     this.pageContent = '';
     this.abortController = null;
     this.isStandalone = true;
@@ -65,12 +65,21 @@ class StandaloneSideChat {
         </div>
       </div>
       
+      <div class="chat-settings">
+        <button class="context-button" id="context-button">
+          <span class="context-icon">📄</span>
+          <span class="context-text">Use page context</span>
+          <span class="context-status">OFF</span>
+        </button>
+      </div>
+      
       <div class="chat-messages" id="chat-messages">
         <div class="messages-container">
           <div class="chat-welcome">
             <div class="welcome-icon">🤖</div>
-            <h4>Bem-vindo ao XandAI Chat!</h4>
-            <p>Seu assistente de IA local está pronto para ajudar. Como posso te auxiliar hoje?</p>
+            <h4>Welcome to XandAI Chat!</h4>
+            <p>Your local AI assistant is ready to help. How can I assist you today?</p>
+            <small>💡 Enable "Use page context" so the AI can analyze the text content of the current page.</small>
           </div>
         </div>
       </div>
@@ -81,7 +90,7 @@ class StandaloneSideChat {
             <textarea 
               id="chat-input" 
               class="chat-input" 
-              placeholder="Digite sua mensagem..."
+              placeholder="Type your message..."
               rows="1"
             ></textarea>
             <button id="chat-send" class="chat-send" disabled>
@@ -101,7 +110,7 @@ class StandaloneSideChat {
           </div>
           <div class="input-footer">
             <span class="model-info">Powered by Ollama</span>
-            <span class="typing-hint">Enter para enviar • Shift + Enter para nova linha</span>
+            <span class="typing-hint">Enter to send • Shift + Enter for new line</span>
           </div>
         </div>
       </div>
@@ -117,6 +126,7 @@ class StandaloneSideChat {
     this.clearButton = chatContainer.querySelector('.chat-clear');
     this.closeButton = chatContainer.querySelector('.chat-close');
     this.minimizeButton = chatContainer.querySelector('.chat-minimize');
+    this.contextButton = chatContainer.querySelector('#context-button');
   }
   
   setupEventListeners() {
@@ -143,6 +153,20 @@ class StandaloneSideChat {
         });
       } else {
         window.minimize();
+      }
+    });
+    
+    // Context button
+    this.contextButton.addEventListener('click', () => {
+      this.includePageContext = !this.includePageContext;
+      this.updateContextButton();
+      this.saveSettings();
+      
+      if (this.includePageContext) {
+        this.capturePageContent();
+      } else {
+        this.pageContent = '';
+        this.addSystemMessage('Page context disabled.');
       }
     });
     
@@ -209,12 +233,31 @@ class StandaloneSideChat {
     this.input.style.overflowY = scrollHeight > maxHeight ? 'auto' : 'hidden';
   }
   
+  updateContextButton() {
+    const statusElement = this.contextButton.querySelector('.context-status');
+    const iconElement = this.contextButton.querySelector('.context-icon');
+    
+    if (this.includePageContext) {
+      this.contextButton.classList.add('active');
+      statusElement.textContent = 'ON';
+      iconElement.textContent = '📄';
+    } else {
+      this.contextButton.classList.remove('active');
+      statusElement.textContent = 'OFF';
+      iconElement.textContent = '📄';
+    }
+  }
+  
   async loadSettings() {
     try {
       const response = await this.sendMessageToBackground('getStorage', { keys: ['sideChatSettings'] });
       if (response && response.sideChatSettings) {
-        // In standalone mode, always keep page context disabled
-        this.includePageContext = false;
+        this.includePageContext = response.sideChatSettings.includePageContext || false;
+        this.updateContextButton();
+        
+        if (this.includePageContext) {
+          this.capturePageContent();
+        }
       }
     } catch (error) {
       console.warn('Could not load settings:', error);
@@ -222,7 +265,15 @@ class StandaloneSideChat {
   }
   
   saveSettings() {
-    // Settings saving disabled in standalone mode
+    try {
+      this.sendMessageToBackground('setStorage', {
+        sideChatSettings: {
+          includePageContext: this.includePageContext
+        }
+      });
+    } catch (error) {
+      console.warn('Could not save settings:', error);
+    }
   }
   
   async loadChatHistory() {
@@ -290,11 +341,11 @@ class StandaloneSideChat {
   }
   
   clearChat() {
-    if (confirm('Tem certeza que deseja limpar todo o histórico do chat?')) {
+    if (confirm('Are you sure you want to clear all chat history?')) {
       this.messages = [];
       this.renderMessages();
       this.sendMessageToBackground('setStorage', { sideChatHistory: [] });
-      this.addSystemMessage('Histórico do chat limpo. 🧹');
+      this.addSystemMessage('Chat history cleared. 🧹');
     }
   }
   
@@ -343,19 +394,162 @@ class StandaloneSideChat {
   }
   
   formatMessage(content) {
-    return content
-      // Code blocks primeiro (```code```)
-      .replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>')
-      // Inline code (`code`)
-      .replace(/`([^`]+)`/g, '<code>$1</code>')
-      // Bold (**text**)
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      // Italic (*text*)
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      // Links [text](url)
-      .replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
-      // Quebras de linha
-      .replace(/\n/g, '<br>');
+    let formatted = content;
+
+    // Process code blocks FIRST (before HTML escaping) to preserve content
+    formatted = formatted.replace(/```(\w+)?\s*([\s\S]*?)```/g, (match, lang, code) => {
+      const language = lang ? ` class="language-${lang.toLowerCase()}"` : '';
+      // Escape HTML in code content
+      const escapedCode = code
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;')
+        .replace(/^\s*\n|\n\s*$/g, '')
+        .trim();
+      return `<pre class="code-block"><code${language}>${escapedCode}</code></pre>`;
+    });
+
+    // Process inline code SECOND (before HTML escaping)
+    formatted = formatted.replace(/`([^`]+)`/g, (match, code) => {
+      const escapedCode = code
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;');
+      return `<code class="inline-code">${escapedCode}</code>`;
+    });
+
+    // NOW escape remaining HTML (but not inside code blocks)
+    // Split by code blocks and only escape content outside them
+    const codeBlockPattern = /<pre class="code-block">[\s\S]*?<\/pre>/g;
+    const inlineCodePattern = /<code class="inline-code">[\s\S]*?<\/code>/g;
+    
+    // Find all code blocks and inline code positions
+    const codeBlocks = [];
+    let match;
+    
+    // Find code block positions
+    while ((match = codeBlockPattern.exec(formatted)) !== null) {
+      codeBlocks.push({ start: match.index, end: match.index + match[0].length });
+    }
+    
+    // Reset regex
+    codeBlockPattern.lastIndex = 0;
+    
+    // Find inline code positions
+    while ((match = inlineCodePattern.exec(formatted)) !== null) {
+      codeBlocks.push({ start: match.index, end: match.index + match[0].length });
+    }
+    
+    // Sort by position
+    codeBlocks.sort((a, b) => a.start - b.start);
+    
+    // Escape HTML only in parts not inside code blocks
+    let result = '';
+    let lastIndex = 0;
+    
+    for (const block of codeBlocks) {
+      // Escape text before this code block
+      const beforeBlock = formatted.substring(lastIndex, block.start);
+      result += beforeBlock.replace(/[&<>"']/g, (match) => {
+        switch (match) {
+          case '&': return '&amp;';
+          case '<': return '&lt;';
+          case '>': return '&gt;';
+          case '"': return '&quot;';
+          case "'": return '&#x27;';
+          default: return match;
+        }
+      });
+      
+      // Add the code block as-is
+      result += formatted.substring(block.start, block.end);
+      lastIndex = block.end;
+    }
+    
+    // Escape remaining text after last code block
+    const afterBlocks = formatted.substring(lastIndex);
+    result += afterBlocks.replace(/[&<>"']/g, (match) => {
+      switch (match) {
+        case '&': return '&amp;';
+        case '<': return '&lt;';
+        case '>': return '&gt;';
+        case '"': return '&quot;';
+        case "'": return '&#x27;';
+        default: return match;
+      }
+    });
+    
+    formatted = result;
+
+    // Headers (# ## ### #### ##### ######)
+    formatted = formatted.replace(/^(#{1,6})\s+(.+)$/gm, (match, hashes, text) => {
+      const level = hashes.length;
+      return `<h${level} class="markdown-h${level}">${text}</h${level}>`;
+    });
+
+    // Bold (**text** or __text__)
+    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    formatted = formatted.replace(/__(.*?)__/g, '<strong>$1</strong>');
+
+    // Italic (*text* or _text_)
+    formatted = formatted.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    formatted = formatted.replace(/_([^_]+)_/g, '<em>$1</em>');
+
+    // Strikethrough (~~text~~)
+    formatted = formatted.replace(/~~(.*?)~~/g, '<del>$1</del>');
+
+    // Links [text](url)
+    formatted = formatted.replace(/\[([^\]]+)\]\(([^\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" class="markdown-link">$1</a>');
+
+    // Auto-links (http://example.com)
+    formatted = formatted.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener" class="markdown-link">$1</a>');
+
+    // Lists
+    // Unordered lists (- or * or +)
+    formatted = formatted.replace(/^[\s]*[-*+]\s+(.+)$/gm, '<li class="markdown-li">$1</li>');
+    
+    // Ordered lists (1. 2. 3.)
+    formatted = formatted.replace(/^[\s]*\d+\.\s+(.+)$/gm, '<li class="markdown-oli">$1</li>');
+
+    // Wrap consecutive list items in ul/ol tags
+    formatted = formatted.replace(/(<li class="markdown-li">.*?<\/li>)(?:\s*<li class="markdown-li">.*?<\/li>)*/gs, 
+      '<ul class="markdown-ul">$&</ul>');
+    formatted = formatted.replace(/(<li class="markdown-oli">.*?<\/li>)(?:\s*<li class="markdown-oli">.*?<\/li>)*/gs, 
+      '<ol class="markdown-ol">$&</ol>');
+
+    // Blockquotes (> text)
+    formatted = formatted.replace(/^>\s+(.+)$/gm, '<blockquote class="markdown-blockquote">$1</blockquote>');
+
+    // Horizontal rules (--- or ***)
+    formatted = formatted.replace(/^(---|\*\*\*)$/gm, '<hr class="markdown-hr">');
+
+    // Tables (basic support)
+    formatted = formatted.replace(/\|(.+)\|/g, (match, content) => {
+      const cells = content.split('|').map(cell => cell.trim());
+      const cellTags = cells.map(cell => `<td class="markdown-td">${cell}</td>`).join('');
+      return `<tr class="markdown-tr">${cellTags}</tr>`;
+    });
+
+    // Wrap table rows in table tags
+    formatted = formatted.replace(/(<tr class="markdown-tr">.*?<\/tr>)(?:\s*<tr class="markdown-tr">.*?<\/tr>)*/gs, 
+      '<table class="markdown-table">$&</table>');
+
+    // Line breaks (preserve double line breaks as paragraphs, single as br)
+    formatted = formatted.replace(/\n\n+/g, '</p><p class="markdown-p">');
+    formatted = formatted.replace(/\n/g, '<br>');
+    
+    // Wrap in paragraph if not already wrapped
+    if (!formatted.includes('<p') && !formatted.includes('<h') && !formatted.includes('<ul') && !formatted.includes('<ol') && !formatted.includes('<pre')) {
+      formatted = `<p class="markdown-p">${formatted}</p>`;
+    } else if (formatted.includes('</p><p')) {
+      formatted = `<p class="markdown-p">${formatted}</p>`;
+    }
+
+    return formatted;
   }
   
   async sendMessage() {
@@ -412,10 +606,27 @@ class StandaloneSideChat {
   }
   
   prepareMessagesForAPI() {
-    const messages = [{
-      role: 'system',
-      content: 'Você é o XandAI, um assistente de IA útil e amigável. Responda sempre em português brasileiro. Seja prestativo, claro e direto em suas respostas. Use emojis quando apropriado para tornar a conversa mais amigável.'
-    }];
+    const messages = [];
+    
+    // Add system prompt with page context if enabled
+    if (this.includePageContext && this.pageContent) {
+      messages.push({
+        role: 'system',
+        content: `You are XandAI, a helpful and friendly AI assistant. Be helpful, clear, and direct in your responses. Use emojis when appropriate to make the conversation more engaging.
+
+The user has enabled page context, so you have access to the complete text content of the current page for reference and analysis.
+
+Page Content:
+${this.pageContent}
+
+Use this textual context to provide more accurate and relevant responses about the current page. You can analyze the content, information, data, and any other aspect of the page text when responding to user questions.`
+      });
+    } else {
+      messages.push({
+        role: 'system',
+        content: 'You are XandAI, a helpful and friendly AI assistant. Be helpful, clear, and direct in your responses. Use emojis when appropriate to make the conversation more engaging.'
+      });
+    }
     
     const recentMessages = this.messages.slice(-10);
     recentMessages.forEach(msg => {
@@ -496,6 +707,74 @@ class StandaloneSideChat {
       reader.releaseLock();
     }
   }
+  
+  /**
+   * Capture page content from parent tab
+   */
+  async capturePageContent() {
+    try {
+      // Get the current active tab to retrieve HTML
+      const tabs = await chrome.tabs.query({ active: true, currentWindow: false });
+      if (tabs.length === 0) {
+        throw new Error('No active tab found');
+      }
+      
+      const activeTab = tabs[0];
+      console.log('📄 Standalone: Capturing HTML from tab:', activeTab.id);
+      
+      // Execute script in the active tab to get page text
+      const results = await chrome.scripting.executeScript({
+        target: { tabId: activeTab.id },
+        func: () => {
+          // Get main content areas first
+          const mainContent = document.querySelector('main, article, [role="main"], .content, #content');
+          let content = '';
+          
+          if (mainContent) {
+            content = mainContent.innerText || mainContent.textContent || '';
+          } else {
+            // Fallback to body content, but filter out common noise
+            const elementsToExclude = 'script, style, nav, header, footer, aside, .navigation, .nav, .menu, .sidebar, .ads, .advertisement';
+            const bodyClone = document.body.cloneNode(true);
+            
+            // Remove excluded elements
+            const excludedElements = bodyClone.querySelectorAll(elementsToExclude);
+            excludedElements.forEach(el => el.remove());
+            
+            content = bodyClone.innerText || bodyClone.textContent || '';
+          }
+          
+          // Clean up the text
+          return content
+            .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+            .replace(/\n+/g, '\n') // Replace multiple newlines with single newline
+            .trim();
+        }
+      });
+      
+      if (results && results[0] && results[0].result) {
+        let content = results[0].result;
+        
+        // Limit content length to avoid overwhelming the model
+        const maxLength = 6000;
+        if (content.length > maxLength) {
+          content = content.substring(0, maxLength) + '\n\n[Page text truncated - showing first ' + maxLength + ' characters]';
+        }
+        
+        this.pageContent = content;
+        console.log('📄 Standalone: Page text captured, length:', content.length);
+        this.addSystemMessage('Page context captured (full text) and will be included in conversations.');
+      } else {
+        throw new Error('Failed to retrieve page content');
+      }
+    } catch (error) {
+      console.error('Error capturing page content:', error);
+      this.pageContent = '';
+      this.addSystemMessage('Could not capture page context: ' + error.message);
+    }
+  }
+  
+
 }
 
 // Initialize standalone chat when page loads
