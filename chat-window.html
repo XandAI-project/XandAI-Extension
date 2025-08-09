@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>XandAI Chat</title>
+  <link rel="stylesheet" href="src/ui/sidechat.css">
+  <style>
+    /* Reset e variáveis */
+    :root {
+      --primary-color: #007bff;
+      --primary-hover: #0056b3;
+      --background: #f8f9fa;
+      --surface: #ffffff;
+      --text-primary: #212529;
+      --text-secondary: #6c757d;
+      --border: #dee2e6;
+      --border-focus: #80bdff;
+      --shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.15);
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      background: var(--background);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      color: var(--text-primary);
+      overflow: hidden;
+    }
+    
+    .standalone-chat {
+      width: 100%;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      max-width: none;
+    }
+    
+    .standalone-chat .xandai-side-chat {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: var(--surface);
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+    }
+
+    /* Header */
+    .standalone-mode .chat-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      box-shadow: var(--shadow);
+      z-index: 10;
+    }
+
+    .standalone-mode .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .standalone-mode .chat-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .standalone-mode .chat-icon {
+      font-size: 28px;
+    }
+
+    .standalone-mode .chat-title h3 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    .standalone-mode .chat-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .standalone-mode .chat-controls button {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .standalone-mode .chat-controls button:hover {
+      background: var(--background);
+      border-color: var(--primary-color);
+      color: var(--primary-color);
+    }
+
+    /* Messages Area */
+    .standalone-mode .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0;
+      background: var(--background);
+      position: relative;
+    }
+
+    .standalone-mode .messages-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .standalone-mode .chat-welcome {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 40px 32px;
+      text-align: center;
+      margin: 40px 0;
+      box-shadow: var(--shadow);
+    }
+
+    .standalone-mode .welcome-icon {
+      font-size: 64px;
+      margin-bottom: 20px;
+      display: block;
+    }
+
+    .standalone-mode .chat-welcome h4 {
+      margin: 0 0 12px 0;
+      font-size: 28px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .standalone-mode .chat-welcome p {
+      margin: 0;
+      font-size: 18px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* Message bubbles */
+    .standalone-mode .chat-message {
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      max-width: 85%;
+    }
+
+    .standalone-mode .chat-message.user {
+      align-self: flex-end;
+    }
+
+    .standalone-mode .chat-message.assistant {
+      align-self: flex-start;
+    }
+
+    .standalone-mode .message-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .standalone-mode .message-content {
+      background: var(--surface);
+      padding: 16px 20px;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      font-size: 15px;
+      line-height: 1.6;
+      word-wrap: break-word;
+    }
+
+    .standalone-mode .chat-message.user .message-content {
+      background: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
+    }
+
+    /* Input Area */
+    .standalone-mode .chat-input-area {
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      flex-shrink: 0;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .standalone-mode .input-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .standalone-mode .input-wrapper {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+      transition: border-color 0.2s ease;
+    }
+
+    .standalone-mode .input-wrapper:focus-within {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+    }
+
+    .standalone-mode .chat-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 16px;
+      line-height: 1.5;
+      color: var(--text-primary);
+      resize: none;
+      min-height: 24px;
+      max-height: 200px;
+      font-family: inherit;
+    }
+
+    .standalone-mode .chat-input::placeholder {
+      color: var(--text-secondary);
+    }
+
+    .standalone-mode .chat-send {
+      background: var(--primary-color);
+      border: none;
+      border-radius: 8px;
+      padding: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 48px;
+      height: 48px;
+    }
+
+    .standalone-mode .chat-send:hover:not(:disabled) {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+
+    .standalone-mode .chat-send:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .standalone-mode .input-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .standalone-mode .model-info {
+      font-weight: 500;
+      color: var(--primary-color);
+    }
+
+    /* Scrollbar */
+    .standalone-mode .chat-messages::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .standalone-mode .chat-messages::-webkit-scrollbar-track {
+      background: var(--background);
+    }
+
+    .standalone-mode .chat-messages::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    .standalone-mode .chat-messages::-webkit-scrollbar-thumb:hover {
+      background: var(--text-secondary);
+    }
+
+    /* Loading animation */
+    .standalone-mode .loading-icon svg {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .standalone-mode .header-content {
+        padding: 12px 16px;
+      }
+
+      .standalone-mode .chat-title h3 {
+        font-size: 20px;
+      }
+
+      .standalone-mode .chat-icon {
+        font-size: 24px;
+      }
+
+      .standalone-mode .messages-container {
+        padding: 16px;
+      }
+
+      .standalone-mode .chat-welcome {
+        padding: 24px 20px;
+        margin: 20px 0;
+      }
+
+      .standalone-mode .welcome-icon {
+        font-size: 48px;
+      }
+
+      .standalone-mode .chat-welcome h4 {
+        font-size: 24px;
+      }
+
+      .standalone-mode .chat-welcome p {
+        font-size: 16px;
+      }
+
+      .standalone-mode .input-container {
+        padding: 16px;
+      }
+
+      .standalone-mode .chat-message {
+        max-width: 95%;
+      }
+
+      .standalone-mode .input-wrapper {
+        padding: 8px;
+        gap: 8px;
+      }
+
+      .standalone-mode .chat-send {
+        min-width: 44px;
+        height: 44px;
+        padding: 10px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .standalone-mode .chat-controls {
+        gap: 4px;
+      }
+
+      .standalone-mode .chat-controls button {
+        padding: 6px;
+      }
+
+      .standalone-mode .messages-container {
+        padding: 12px;
+      }
+
+      .standalone-mode .input-container {
+        padding: 12px;
+      }
+
+      .standalone-mode .chat-welcome {
+        padding: 20px 16px;
+      }
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --background: #1a1a1a;
+        --surface: #2d2d2d;
+        --text-primary: #ffffff;
+        --text-secondary: #b3b3b3;
+        --border: #404040;
+        --shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        --shadow-lg: 0 4px 20px rgba(0, 0, 0, 0.4);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="standalone-chat">
+    <div id="chat-container"></div>
+  </div>
+
+  <script src="src/ui/standalone-chat.js"></script>
+</body>
+</html>

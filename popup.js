@@ -10,6 +10,7 @@ const connectionDot = document.getElementById('connection-dot');
 const connectionText = document.getElementById('connection-text');
 const settingsToggle = document.getElementById('settings-toggle');
 const settingsPanel = document.getElementById('settings-panel');
+const chatToggle = document.getElementById('chat-toggle');
 const historyToggle = document.getElementById('history-toggle');
 const historyPanel = document.getElementById('history-panel');
 const historyContent = document.getElementById('history-content');
@@ -70,6 +71,185 @@ settingsToggle.addEventListener('click', () => {
   if (settingsPanel.classList.contains('show')) {
     historyPanel.classList.remove('show');
     historyToggle.classList.remove('active');
+  }
+});
+
+// Toggle chat panel
+chatToggle.addEventListener('click', async () => {
+  console.log('🔧 Chat toggle clicked - opening side-by-side chat immediately');
+  
+  // For side-by-side mode, always open standalone chat for better performance
+  // This eliminates the complex content script detection and injection logic
+  openStandaloneChat();
+});
+
+// Global variables
+let standaloneWindowId = null;
+const sideBySideMode = true; // Always enabled
+
+// Function to open standalone chat window
+function openStandaloneChat() {
+  console.log('🚀 Opening standalone chat window');
+  
+  // Always create new window for side-by-side mode to ensure proper layout
+  // Clear any existing window ID first
+  if (standaloneWindowId) {
+    console.log('🔄 Clearing existing window ID for fresh side-by-side layout');
+    standaloneWindowId = null;
+  }
+  
+  createStandaloneWindow();
+}
+
+function createStandaloneWindow() {
+  if (sideBySideMode) {
+    createSideBySideWindow();
+  } else {
+    createFallbackWindow();
+  }
+}
+
+function createSideBySideWindow() {
+  console.log('🔄 Creating side-by-side window layout');
+  
+  // Close popup immediately to show responsiveness
+  setTimeout(() => window.close(), 100);
+  
+  // Get current window info first
+  chrome.windows.getCurrent((currentWindow) => {
+    // Store original window state immediately
+    storeOriginalWindowState(currentWindow);
+    
+    // Get screen dimensions
+    chrome.system.display.getInfo((displays) => {
+      // Find which display contains the current window
+      let targetDisplay = null;
+      const windowCenterX = currentWindow.left + (currentWindow.width / 2);
+      const windowCenterY = currentWindow.top + (currentWindow.height / 2);
+      
+      for (const display of displays) {
+        if (windowCenterX >= display.bounds.left && 
+            windowCenterX < display.bounds.left + display.bounds.width &&
+            windowCenterY >= display.bounds.top && 
+            windowCenterY < display.bounds.top + display.bounds.height) {
+          targetDisplay = display;
+          break;
+        }
+      }
+      
+      // Fallback to primary display
+      if (!targetDisplay) {
+        targetDisplay = displays.find(d => d.isPrimary) || displays[0];
+      }
+      
+      const screenWidth = targetDisplay.workArea.width;
+      const screenHeight = targetDisplay.workArea.height;
+      const screenLeft = targetDisplay.workArea.left;
+      const screenTop = targetDisplay.workArea.top;
+      
+      // Calculate dimensions for side-by-side layout
+      const chatWidth = 450;
+      const browserWidth = screenWidth - chatWidth;
+      
+      // Resize browser and create chat window simultaneously
+      chrome.windows.update(currentWindow.id, {
+        left: screenLeft,
+        top: screenTop,
+        width: browserWidth,
+        height: screenHeight,
+        state: 'normal'
+      });
+      
+      // Create chat window immediately without waiting for browser resize
+      chrome.windows.create({
+        url: chrome.runtime.getURL('chat-window.html'),
+        type: 'popup',
+        left: screenLeft + browserWidth,
+        top: screenTop,
+        width: chatWidth,
+        height: screenHeight,
+        focused: true,
+        state: 'normal'
+      }, (newWindow) => {
+        if (!chrome.runtime.lastError && newWindow) {
+          console.log('✅ Side-by-side chat window created');
+          standaloneWindowId = newWindow.id;
+        } else {
+          console.error('❌ Error creating chat window, using fallback');
+          createFallbackWindow();
+        }
+      });
+    });
+  });
+}
+
+function createFallbackWindow() {
+  chrome.windows.create({
+    url: chrome.runtime.getURL('chat-window.html'),
+    type: 'popup',
+    width: 500,
+    height: 700,
+    focused: true,
+    state: 'normal'
+  }, (newWindow) => {
+    if (chrome.runtime.lastError) {
+      console.error('❌ Error creating fallback chat window:', chrome.runtime.lastError);
+      // Last resort: open in new tab
+      chrome.tabs.create({
+        url: chrome.runtime.getURL('chat-window.html'),
+        active: true
+      });
+    } else {
+      console.log('✅ Fallback chat window created:', newWindow);
+      standaloneWindowId = newWindow.id;
+      window.close();
+    }
+  });
+}
+
+let originalWindowState = null;
+
+function storeOriginalWindowState(windowInfo) {
+  originalWindowState = {
+    id: windowInfo.id,
+    left: windowInfo.left,
+    top: windowInfo.top,
+    width: windowInfo.width,
+    height: windowInfo.height,
+    state: windowInfo.state
+  };
+  console.log('💾 Stored original window state:', originalWindowState);
+}
+
+function restoreOriginalWindowState() {
+  if (originalWindowState) {
+    chrome.windows.update(originalWindowState.id, {
+      left: originalWindowState.left,
+      top: originalWindowState.top,
+      width: originalWindowState.width,
+      height: originalWindowState.height,
+      state: originalWindowState.state
+    }, () => {
+      if (chrome.runtime.lastError) {
+        console.error('❌ Error restoring window:', chrome.runtime.lastError);
+      } else {
+        console.log('✅ Browser window restored to original state');
+      }
+      originalWindowState = null;
+    });
+  }
+}
+
+// Listen for window removal to clear the ID and restore browser
+chrome.windows.onRemoved.addListener((windowId) => {
+  if (windowId === standaloneWindowId) {
+    standaloneWindowId = null;
+    console.log('🗑️ Standalone window closed, clearing ID and restoring browser');
+    
+    // Restore browser window to original state
+    setTimeout(() => {
+      restoreOriginalWindowState();
+    }, 100);
   }
 });
 
@@ -489,10 +669,18 @@ async function pullModel() {
       `${formatModelDisplayName(modelName)} (detected as HuggingFace model)` : formatModelDisplayName(modelName);
     showModelStatus(`Pulling model: ${displayName}...`, 'info');
     
+    console.log('🚀 Initiating pull:', {
+      modelName: modelName,
+      url: url,
+      originalInput: originalInput,
+      wasAutoFormatted: wasAutoFormatted
+    });
+    
     // Show progress bar
     showPullProgress(0, 'Initializing pull...');
     
     const response = await new Promise((resolve, reject) => {
+      console.log('📡 Sending message to background script...');
       chrome.runtime.sendMessage({
         action: 'pullModel',
         data: {
@@ -500,11 +688,15 @@ async function pullModel() {
           modelName: modelName
         }
       }, (response) => {
+        console.log('📩 Received response from background:', response);
         if (chrome.runtime.lastError) {
+          console.error('❌ Runtime error:', chrome.runtime.lastError);
           reject(new Error(chrome.runtime.lastError.message));
         } else if (response?.success) {
+          console.log('✅ Pull successful:', response.data);
           resolve(response.data);
         } else {
+          console.error('❌ Pull failed:', response);
           reject(new Error(response?.error || 'Failed to pull model'));
         }
       });
@@ -521,7 +713,18 @@ async function pullModel() {
   } catch (error) {
     console.error('Error pulling model:', error);
     hidePullProgress();
-    showModelStatus(`Error pulling model ${formatModelDisplayName(modelName)}: ${error.message}`, 'error');
+    
+    // Format error message with helpful hints
+    let errorMessage = `Error pulling model ${formatModelDisplayName(modelName)}: ${error.message}`;
+    
+    // Add specific hints based on error type
+    if (error.message.includes('GGUF')) {
+      errorMessage += '\n\n💡 Hint: Look for models with "-GGUF" in the name or from TheBloke on HuggingFace.';
+    } else if (error.message.includes('invalid model name')) {
+      errorMessage += '\n\n💡 Hint: Valid formats:\n• llama2\n• mistral\n• theBloke/Llama-2-7B-Chat-GGUF';
+    }
+    
+    showModelStatus(errorMessage, 'error');
   } finally {
     isPulling = false;
     pullModelBtn.disabled = false;
@@ -585,23 +788,45 @@ async function deleteModel(modelName) {
 
 // Show model operation status
 function showModelStatus(message, type) {
-  modelOperationStatus.textContent = message;
+  // Handle multiline messages
+  if (message.includes('\n')) {
+    // Convert to HTML with line breaks
+    modelOperationStatus.innerHTML = message.split('\n').map(line => {
+      // Add special formatting for hints
+      if (line.includes('💡 Hint:')) {
+        return `<strong>${line}</strong>`;
+      }
+      // Format bullet points
+      if (line.trim().startsWith('•')) {
+        return `<span style="margin-left: 20px;">${line}</span>`;
+      }
+      return line;
+    }).join('<br>');
+  } else {
+    modelOperationStatus.textContent = message;
+  }
+  
   modelOperationStatus.className = `status ${type}`;
   modelOperationStatus.style.display = 'block';
   
-  // Auto-hide after 5 seconds for success/info
+  // Auto-hide after 5 seconds for success/info, longer for errors
+  const hideDelay = type === 'error' ? 10000 : 5000;
   if (type === 'success' || type === 'info') {
     setTimeout(() => {
       modelOperationStatus.style.display = 'none';
-    }, 5000);
+    }, hideDelay);
   }
 }
 
 // Show pull progress bar
 function showPullProgress(percentage, statusText) {
+  console.log(`📊 Showing progress: ${percentage}% - ${statusText}`);
   pullProgressContainer.style.display = 'block';
   pullProgressFill.style.width = `${percentage}%`;
   pullProgressText.textContent = statusText || '';
+  
+  // Force a reflow to ensure the progress bar updates
+  pullProgressFill.offsetHeight;
 }
 
 // Hide pull progress bar
@@ -615,11 +840,13 @@ function hidePullProgress() {
 function handlePullProgress(data) {
   if (!data) return;
   
+  console.log('📥 Progress update received:', data);
+  
   let percentage = 0;
   let statusText = data.status || '';
   
   // Calculate progress percentage if we have completed/total info
-  if (data.completed && data.total) {
+  if (data.completed !== undefined && data.total !== undefined) {
     percentage = Math.round((data.completed / data.total) * 100);
     const completed = formatBytes(data.completed);
     const total = formatBytes(data.total);
@@ -627,7 +854,13 @@ function handlePullProgress(data) {
   } else if (data.status) {
     // Handle status-only updates
     if (data.status.includes('pulling')) {
-      percentage = 10; // Show some progress for pulling
+      percentage = 5; // Show initial progress
+      statusText = data.status;
+    } else if (data.status.includes('resolving')) {
+      percentage = 10;
+      statusText = 'Resolving model...';
+    } else if (data.status.includes('downloading')) {
+      percentage = percentage || 15; // Default if no specific progress
       statusText = data.status;
     } else if (data.status.includes('verifying')) {
       percentage = 90; // Near completion for verification
